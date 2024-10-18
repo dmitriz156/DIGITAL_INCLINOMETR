@@ -133,9 +133,7 @@ uint8_t Temp;
 #define DATA_REGISTER_EMPTY (1<<UDRE)
 #define RX_COMPLETE (1<<RXC)
 
-// USART Receiver buffer
-uint8_t rx_buffer[DATA_PACKAGE_SIZE];
-// USART Transmitter buffer
+volatile uint8_t rx_buffer[DATA_PACKAGE_SIZE];
 volatile uint8_t tx_buffer[DATA_PACKAGE_SIZE];
 //volatile uint8_t address_change_Buffer[DATA_PACKAGE_SIZE];
 
@@ -148,8 +146,7 @@ bool AvrgFLAG = 0;
 uint8_t rx_counter, rx_counter;
 // This flag is set on USART Receiver buffer overflow
 bool rx_buffer_overflow;
-//----------------------------------------------------------------------------------
-//функкція обчислення СРС
+
 uint8_t crc( uint8_t *code, uint8_t size);
 //----------------------------------------------------------------------------------
 // USART Receiver interrupt service routine
@@ -357,9 +354,6 @@ uint8_t crc( uint8_t *code, uint8_t size)
 
 ISR(USART_RXC_vect)
 {
-// 	char status;
-// 	status = UCSRA;
-	//Зчитати прийнятий 9-й бітик
 	//first_bit = (UCSRB & (1 << RXB8));
 	
 	//Якщо отримали ознаку першого байту, - обнулити лічильник буферу
@@ -370,7 +364,6 @@ ISR(USART_RXC_vect)
 	}
 	rx_buffer[rx_counter] = UDR;
 	if (rx_counter < DATA_PACKAGE_SIZE-1){ rx_counter ++;}
-	//Якщо усі 6 байт посилки - приступити до обробки данних
 	//if (rx_counter == DATA_PACKAGE_SIZE)
 	else
 	{
@@ -400,23 +393,16 @@ ISR(USART_RXC_vect)
 				rx_buffer[i] = 0;
 			}
 			TX_ON = 1;
-			//Записати поточне значення для пересилки
+			memset(tx_buffer, 0, DATA_PACKAGE_SIZE);
 			tx_buffer[0] = Sensor_Addres;
-			tx_buffer[1] = 0;
-			tx_buffer[2] = 0;
-			tx_buffer[3] = 0;
-			tx_buffer[4] = 0;
 			float_to_byte(Y_angle, tx_buffer, 1);
-			tx_buffer[5] = Sensor_Addres;
-				
-			//обрахувати контрольну суму і вислати останнім байтом
-			tx_buffer[6] = crc(tx_buffer, DATA_PACKAGE_SIZE-1);
-			//_delay_us(200);
+			tx_buffer[5] = Sensor_Addres;	
+			tx_buffer[6] = crc(tx_buffer, DATA_PACKAGE_SIZE-1);           //обрахувати контрольну суму і вислати останнім байтом
 			_delay_ms(1);
 
 			Enable_Flag = 0;
-			//Встановити прапорець адресного бітика
-			UCSRB |= (1 << 0);
+			
+			UCSRB |= (1 << TXB8);
 			tx_counter = (DATA_PACKAGE_SIZE-1);
 			//Передавання пакету данних
 			UDR = tx_buffer[0];
@@ -433,9 +419,8 @@ ISR(USART_TXC_vect)
 	if (tx_counter > 0)
 	{
 		tx_counter--;
-		//Скинули 9-й біт
-		//UCSRB &= ~(1 << 0);
-		USART_TX_9BIT = 0;
+		UCSRB &= ~(1 << TXB8);       //Скинули 9-й біт
+		
 		UDR = tx_buffer[(DATA_PACKAGE_SIZE-1) - tx_counter];
 	}
 	else
@@ -448,56 +433,20 @@ ISR(USART_TXC_vect)
 
 /* ======================================================================================================*/
 
-
-// void UART_Init() {
-// 	/*Set baud rate */
-// 	UBRRH = (unsigned char)(ubrr_value >> 8);
-// 	UBRRL = (unsigned char)ubrr_value;
-// 	//UBRRL = 47;
-// 	UCSRB |= (1 << TXEN) | (1 << RXEN);
-// 	/* Set frame format: 8data, 1stop bit */
-// 	UCSRC |= (1 << UCSZ1) | (1 << UCSZ0) | (1 << URSEL);
-// }
-
 void UART_Init()
 {
-	// USART initialization
-	// Communication Parameters: 9 Data, 1 Stop, No Parity
-	// USART Receiver: On
-	// USART Transmitter: On
-	// USART Mode: Asynchronous
-	// USART Baud Rate: 19200
 	/*UCSRA=0x00;
 	UCSRB=0xDC;
 	UCSRC=0x86;
 	UBRRH=0x00;
 	UBRRL=0x2F;*/
 
-	UCSRA=0x00;
-	UCSRB=0x00;
-	UCSRC=0x00;
-	UBRRH=0x00;
-	UBRRL=0x00;
 	UBRRH = (unsigned char)(ubrr_value >> 8);
 	UBRRL = (unsigned char)ubrr_value;
 	//Увімкнення переривань на передачу та прийом Увімкнення передавача та приймача
-	UCSRB = 0x00;
 	UCSRB |= (1 << RXCIE) | (1 << TXCIE) | (1 << TXEN) | (1 << RXEN) | (1 << UCSZ2);
 	// Встановлення формату кадру: 9 бітів даних, 1 стоп біт, без парності
-	UCSRC = 0x00;
-	UCSRC |= (1 << URSEL) | (1 << UCSZ1) | (1 << UCSZ0);
-		
-		/*UCSRA=0x00;
-		UCSRB=0x00;
-		UCSRC=0x00;
-		UBRRH=0x00;
-		UBRRL=0x00;
-		UBRRH = (unsigned char)(ubrr_value >> 8);
-		UBRRL = (unsigned char)ubrr_value;
-		//UBRRL = 47;
-		UCSRB |= (1 << TXEN) | (1 << RXEN);
-		//Set frame format: 8data, 1stop bit 
-		UCSRC |= (1 << UCSZ1) | (1 << UCSZ0) | (1 << URSEL);*/
+	UCSRC |= (1 << URSEL) | (1 << UCSZ1) | (1 << UCSZ0);	
 }
 
 void UART_Transmit(char data) {
