@@ -8,8 +8,6 @@ HW_Init.c
 
 I2C_UNIT\i2c_unit.c
 
-intfx.c
-
 main.c
 
 mpu6050.c

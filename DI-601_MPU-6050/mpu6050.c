@@ -315,15 +315,15 @@ uint8_t MPU6050_AutoInit(uint16_t _time_out) /* Function for initialize MPU6050 
 	#endif
 	
 	/* ----------- Config MPU60X0 ----------- */
-	MPU6050_Config.SampleRateDivider          = _MPU_CLOCK_DIVIDER_8; /* Set divider to 8 */
+	MPU6050_Config.SampleRateDivider          = _MPU_CLOCK_DIVIDER_0; /* Set divider to 8 */
 	MPU6050_Config.DigitalLowPassFilter       = _DLPF_CFG_260A_256G_HZ;/* Set DLPF */
-	MPU6050_Config.InterruptEnable            = _INT_DATA_RDY_EN; /* Enable data ready interrupt */
+	MPU6050_Config.InterruptEnable            = _INT_DISABLE;//_INT_DATA_RDY_EN; /* Enable data ready interrupt */
 	MPU6050_Config.ExtSync                    = _ES_INPUT_DISABLE; /* Disable external sync */
 	MPU6050_Config.InterruptConfig.IntOpen    = _INT_OPEN_PUSH_PULL; /* Set pin mode to push pull */
 	MPU6050_Config.InterruptConfig.IntLevel   = _INT_LEVEL_ACTIVE_HIGH; /* Set pin level to Active high */
 	MPU6050_Config.InterruptConfig.LatchIntEn = _LATCH_INT_EN_50US_PULSE; /* Set the INT pin emits a 50us long pulse */
 	MPU6050_Config.GyroFullScaleRange         = _GYRO_FULL_SCALE_RANGE_2000; /* Full scale range +/- 2000 degree/S */
-	MPU6050_Config.AccelFullScaleRange        = _ACCEL_FULL_SCALE_RANGE_16G; /* Full scale range 16g */
+	MPU6050_Config.AccelFullScaleRange        = _ACCEL_FULL_SCALE_RANGE_2G; /* Full scale range 16g */
 	MPU6050_Config.ClockSelection             = _CLKSEL_X_AXIS_GYROSCOPE_REFERENCE; /* X axis gyroscope reference frequency */
 	
 	/* ----------- Initialize Register ----------- */

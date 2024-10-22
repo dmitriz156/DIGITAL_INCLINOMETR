@@ -172,6 +172,8 @@
 #define _MPU_INIT_PARAM_DEF     3
 #define _MPU_HIGH_BYTE_SHIFT    8 /* High byte shift value */
 #define _MPU_CLOCK_DIVIDER_8    8 /* Divider */
+#define _MPU_CLOCK_DIVIDER_1    1 /* Divider */
+#define _MPU_CLOCK_DIVIDER_0    0 /* Divider */
 #define _MPU_REG_BIT_3          3 /* 3 Bit */
 #define _MPU_REG_BIT_5          5 /* 5 Bit */
 #define _MPU_REG_BIT_6          6 /* 6 Bit */

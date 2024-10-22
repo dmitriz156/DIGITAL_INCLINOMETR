@@ -3,9 +3,9 @@
  *
  * Created: 15.04.2024 15:30:55
  */ 
+#include "main.h"
 #include "HW_Init.h"
 #include "mpu6050.h"
-#include "intfx.h"
 #include <avr/io.h>
 #include <util/delay.h>
 #include <avr/interrupt.h>
@@ -14,10 +14,12 @@
 #include <stdio.h>
 #include <string.h>
 
+//#define DEBUG_MOD
 #define UART_BUFFER_SIZE		128
 /*===============Constants that determine the types of protractors=================*/
-#define MODULAR_RB_DATA_TYPE		0xAA
-#define RB_DATA_TYPE				0xFA
+// #define MODULAR_RB_DATA_TYPE		0xAA
+// #define RB_DATA_TYPE				0xFA
+// #define BOLLARD_DATA_TYPE			0xBD
 #define ADDRESS_CHANGE_KEY			111
 #define DATA_PACKAGE_SIZE			7
 /*=================================================================================*/
@@ -45,6 +47,9 @@ typedef struct
 }IO_PORT,PINState,EECR_Reg,EEARL_Reg,UCSR0A_Reg,UCSRB_Reg,GICR_Reg;
 
 #define F_CPU 14745600UL
+#define BAUD 19200
+#define UBRR_SPEED F_CPU/16/BAUD-1
+//47
 #define LED_OUT										((volatile IO_PORT*)_SFR_MEM_ADDR(DDRD))->Bit3
 #define LED										    ((volatile IO_PORT*)_SFR_MEM_ADDR(PORTD))->Bit3
 #define PB5_OUT										((volatile IO_PORT*)_SFR_MEM_ADDR(DDRB))->Bit5 //SCK
@@ -70,7 +75,6 @@ int filter_index = 0; // Індекс вікна фільтра
 uint8_t start_token = 0xAB;
 uint16_t count = 0;
 uint8_t send_id = 0;
-uint16_t ubrr_value = 47;
 //===================================================================================================
 float angleX, angleY, angleZ;  // Фільтровані кути
 float prevAngleX, prevAngleY, prevAngleZ;  // Попередні кути для фільтра
@@ -106,7 +110,8 @@ int16_t temp;
 #define BIT_2          		((volatile IO_PORT*)_SFR_MEM_ADDR(PORTD))->Bit4//PORTD.4
 #define IN_P          		((volatile PINState*)_SFR_MEM_ADDR(PINB))->Bit0//PINB.0
 #define IN_G          		((volatile PINState*)_SFR_MEM_ADDR(PIND))->Bit7//PIND.7
-#define TX_ON               ((volatile IO_PORT*)_SFR_MEM_ADDR(PORTD))->Bit2//PORTD.2
+#define TX_ON               ((volatile IO_PORT*)_SFR_MEM_ADDR(PORTD))->Bit2 = 1//PORTD.2
+#define RX_ON				((volatile IO_PORT*)_SFR_MEM_ADDR(PORTD))->Bit2 = 0//PORTD.2
 //Для відладки
 #define DIOD                ((volatile IO_PORT*)_SFR_MEM_ADDR(PORTB))->Bit0//PORTB.0
 #define LED                 ((volatile IO_PORT*)_SFR_MEM_ADDR(PORTD))->Bit3//PORTD.3
@@ -140,7 +145,7 @@ volatile uint8_t tx_buffer[DATA_PACKAGE_SIZE];
 volatile uint8_t Address_Change_Counter = 0;
 volatile bool Address_Change_FLAG = 0;
 volatile bool Enable_Flag = 0;
-volatile bool Data_Type_FLAG = 0;
+volatile data_type_t Angle_Type = 0;
 volatile uint8_t Sensor_Addres = ANGLE_SENS_ADDRESS_1;
 bool AvrgFLAG = 0;
 uint8_t rx_counter, rx_counter;
@@ -159,7 +164,8 @@ ISR(USART_TXC_vect);
 
 // Write a character to the USART Transmitter buffer
 void Putchar(char c);
-void UART_Init();
+
+void UART_Init(uint16_t ubrr_value);
 void UART_Transmit(char data);
 void UART_Transmit_String(const char *str);
 void UART_Print(const char *format, ...);
@@ -174,14 +180,14 @@ int16_t median_filter(int16_t value, int16_t *filter_window);
 #define KALMAN_ACEL_Q	0.01//0.01
 #define KALMAN_GYRO_Q	0.05//0.03
 #define KALMAN_R		0.4//0.015
-float angle = 0;
-float bias = 0;
-float P[2][2] = {{0, 0}, {0, 0}};
+// float angle = 0;
+// float bias = 0;
+// float P[2][2] = {{0, 0}, {0, 0}};
 	
 float kalman_filter(float measured_angle, float gyro_rate, float dt) {
-// 	static float angle = 0;
-// 	static float bias = 0;
-// 	static float P[2][2] = {{0, 0}, {0, 0}};
+	static float angle = 0;
+	static float bias = 0;
+	static float P[2][2] = {{0, 0}, {0, 0}};
 
 	// Перший крок: оцінка нового стану на основі прогнозу
 	angle += dt * (gyro_rate - bias);
@@ -257,39 +263,35 @@ float byte_to_float(uint8_t *array, int start_index) {
 int main(void)
 {
 	sei();
-	wdt_enable(WDTO_1S);
+	//wdt_enable(WDTO_1S);
 	_LCD_PORT_DIR = _ALL_OUTPUT;
 	_I2C_PORT_DIR = ( 1 << _SDA ) | _SCL;
 	
 	/* MPU6050 Init */
 	MPU6050_AutoInit(100);
-	UART_Init();
+	UART_Init(UBRR_SPEED);
 	RX_TX_DIRECTION = 1;
 	//RX_TX = 1;
 	LED_OUT = 1;
-	_delay_ms(100);
+	//_delay_ms(100);
 	//MPU6050_Calibrate(offsetGX, offsetGY, offsetGZ);
 	/* ---------------------------------------- */
-    /* Replace with your application code */
     while (1) 
     {
-		//UART_Init();
+		LED = 1;
 		MPU6050_GetRawAccelX(&Xaxel_int, 20);
 		MPU6050_GetRawAccelY(&Yaxel_int, 20);
 		MPU6050_GetRawAccelZ(&Zaxel_int, 20);
 		MPU6050_GetRawGyroX(&Xgyro_int, 20);
 		MPU6050_GetRawGyroY(&Ygyro_int, 20);
 		MPU6050_GetRawGyroZ(&Zgyro_int, 20);
-		
-		//LED = ~LED;
-		wdt_reset();
+		LED = 0;
+		//wdt_reset();
 // 		MPU6050_GetAccelAngleX(&x_axel, 100);
 // 		MPU6050_GetGyroX(&x_gyro, 100);
-
 		x_axel = ( _MPU_RAD_TO_DEG * ( atan2( -Yaxel_int , -Zaxel_int ) + _MATH_PI ) );
 		y_axel = ( _MPU_RAD_TO_DEG * ( atan2( -Xaxel_int , -Zaxel_int ) + _MATH_PI ) );
 		z_axel = ( _MPU_RAD_TO_DEG * ( atan2( -Yaxel_int , -Xaxel_int ) + _MATH_PI ) );
-
 		x_gyro = ((Xgyro_int /*- offsetGX*/) / _MPU_GYRO_SENS_2000_SENS /*/ (1000 / 120)*/);
 		y_gyro = ((Ygyro_int /*- offsetGY*/) / _MPU_GYRO_SENS_2000_SENS /*/ (1000 / 120)*/);
 		z_gyro = ((Zgyro_int /*- offsetGZ*/) / _MPU_GYRO_SENS_2000_SENS /*/ (1000 / 120)*/);
@@ -298,6 +300,7 @@ int main(void)
 // 		filtered_Y = (int16_t)((0.98 * y_axel) - (0.02 * y_gyro));
 //		Y_angle = KOEF * (y_axel * 0.11) + (1 - KOEF) * y_gyro;
 // 		//================Complementary filter end================
+
 // 		//==================Simple KALMAN filter==================
 // 		filtered_Y = KOEF * y_axel + (1 - KOEF) * y_axel_OLD;
 // 		y_axel_OLD = y_axel;
@@ -305,34 +308,43 @@ int main(void)
 		//X_angle = kalman_filter(x_axel, x_gyro, 110);
 		Y_angle = kalman_filter(y_axel, y_gyro, 110);
 		//Z_angle = kalman_filter(z_axel, z_gyro, 110); //t prev = 120
-		
 	//====================================Output depending on the type BEGIN======================================
-		if (Data_Type_FLAG == 1){Y_angle -= 90.0;}
+		if (Angle_Type == RB_DATA_TYPE){
+			Y_angle -= 90.0;
+		}
 		if (Y_angle <= 180.0){
 			Y_angle = Y_angle;
 		}else{
 			Y_angle = Y_angle - 360.0;
 		}
-		//OUT_angle = SimpleKalmanFilter(Y_angle);
+		if (Angle_Type == BOLLARD_DATA_TYPE)
+		{
+			//x_gyro
+			//Z_gyro
+		}
 	//=====================================Output depending on the type END=======================================
-	//====!!!!!!!!!!!====cod to display in arduino ide monitor=====!!!!!!!!!=======
-		//float_to_byte(Y_angle, Tx_buf, 0);
-		//Y_angle = median_filter(Y_angle, filter_window_Y);
-		//filtered_Y = (int16_t)(Y_angle * 10.0);
-		//_delay_ms(10);
-		//fY = median_filter(y_axel, filter_window_Y);
-		//UART_Transmit_String("X:,Y:,Z:,X_f:,Y_f:,Z_f:\r\n");
-// 		UART_Transmit_String("X:,Y:,Z:\r\n");
-// 		UART_PrintLn("%d", (int16_t)Y_angle);
-
-		//UART_PrintLn("%d,%d,%d,%d,%d,%d", Xaxel, Yaxel, Zaxel, Xgyro, Xgyro, Xgyro);
-		//UART_PrintLn("%d,%d,%d", filtered_X, filtered_Y, filtered_Z); //%.2f	
-	
-		//_delay_ms(10);
+	#ifdef DEBUG_MOD
+		arduino_ploter();
+	#endif
     }
 }
 
 //----------------------------------------------------------------------------------
+
+void arduino_ploter(void)
+{
+	TX_ON;
+	//LED = !LED;
+	//====!!!!!!!!!!!====cod to display in arduino ide monitor=====!!!!!!!!!=======
+	//Y_angle = median_filter(Y_angle, filter_window_Y);
+	//filtered_Y = (int16_t)(Y_angle * 10.0);
+	//UART_Transmit_String("X:,Y:,Z:,X_f:,Y_f:,Z_f:\r\n");
+	UART_Transmit_String("Xg:,Yg:,Zg:\r\n");
+
+	UART_PrintLn("%d,%d,%d", Xgyro_int, Ygyro_int, Zgyro_int);
+	//UART_PrintLn("%d,%d,%d", Xaxel_int, Yaxel_int, Zaxel_int); //%.2f
+}
+
 //функкція обчислення СРС
 uint8_t crc( uint8_t *code, uint8_t size)
 {
@@ -363,11 +375,13 @@ ISR(USART_RXC_vect)
 		//first_bit = 0;
 	}
 	rx_buffer[rx_counter] = UDR;
-	if (rx_counter < DATA_PACKAGE_SIZE-1){ rx_counter ++;}
-	//if (rx_counter == DATA_PACKAGE_SIZE)
+	if (rx_counter < DATA_PACKAGE_SIZE-1)
+	{
+		rx_counter ++;
+	}
 	else
 	{
-		LED = ~LED;
+		//LED = !LED;
 		Enable_Flag = 1;
 		//Якщо прийнятий стартовий байт
 		//якщо адреса співпадає
@@ -375,8 +389,8 @@ ISR(USART_RXC_vect)
 		//І співпадає CRC
 		if ( (rx_buffer[0] == Sensor_Addres) && (Enable_Flag == 1) && (crc(rx_buffer, DATA_PACKAGE_SIZE-1) == rx_buffer[6]))
 		{
-			if (rx_buffer[2] == RB_DATA_TYPE){Data_Type_FLAG = 1;}
-			if (rx_buffer[2] == MODULAR_RB_DATA_TYPE){Data_Type_FLAG = 0;}
+			Angle_Type = rx_buffer[2];
+			
 			if (rx_buffer[3] == ADDRESS_CHANGE_KEY)
 			{
 				if (Address_Change_Counter < 10)
@@ -389,10 +403,9 @@ ISR(USART_RXC_vect)
 			}else{
 				Address_Change_Counter = 0;
 			}
-			for (uint8_t i = 0; i < DATA_PACKAGE_SIZE; i++){
-				rx_buffer[i] = 0;
-			}
-			TX_ON = 1;
+			memset(rx_buffer, 0, DATA_PACKAGE_SIZE);
+			
+			TX_ON;
 			memset(tx_buffer, 0, DATA_PACKAGE_SIZE);
 			tx_buffer[0] = Sensor_Addres;
 			float_to_byte(Y_angle, tx_buffer, 1);
@@ -425,28 +438,24 @@ ISR(USART_TXC_vect)
 	}
 	else
 	{
-		TX_ON = 0;
+		RX_ON;
 	}
 }
 
-// Write a character to the USART Transmitter buffer
-
 /* ======================================================================================================*/
 
-void UART_Init()
+void UART_Init(uint16_t ubrr_value)
 {
-	/*UCSRA=0x00;
-	UCSRB=0xDC;
-	UCSRC=0x86;
-	UBRRH=0x00;
-	UBRRL=0x2F;*/
-
 	UBRRH = (unsigned char)(ubrr_value >> 8);
 	UBRRL = (unsigned char)ubrr_value;
-	//Увімкнення переривань на передачу та прийом Увімкнення передавача та приймача
+	#ifdef DEBUG_MOD
+	UCSRB |= (1 << TXEN) | (1 << RXEN);
+	UCSRC |= (1 << URSEL) | (1 << UCSZ1) | (1 << UCSZ0);
+	#else
 	UCSRB |= (1 << RXCIE) | (1 << TXCIE) | (1 << TXEN) | (1 << RXEN) | (1 << UCSZ2);
 	// Встановлення формату кадру: 9 бітів даних, 1 стоп біт, без парності
 	UCSRC |= (1 << URSEL) | (1 << UCSZ1) | (1 << UCSZ0);	
+	#endif	
 }
 
 void UART_Transmit(char data) {

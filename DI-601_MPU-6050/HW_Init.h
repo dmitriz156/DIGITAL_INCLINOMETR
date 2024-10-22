@@ -11,7 +11,8 @@
 
 #ifndef F_CPU
 
-#define F_CPU 8000000UL         /* Set clock frequency to 1MHz */
+//#define F_CPU 8000000UL         /* Set clock frequency to 1MHz */
+#define F_CPU 14745600UL
 
 #endif
 

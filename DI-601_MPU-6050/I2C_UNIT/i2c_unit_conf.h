@@ -30,7 +30,7 @@
 
 /* -------------------- Define -------------------- */
 
-#define _F_SCL      100000UL 
+#define _F_SCL      400000UL //changed
 #define _PRESCALER  _PRE1 
 
 /*

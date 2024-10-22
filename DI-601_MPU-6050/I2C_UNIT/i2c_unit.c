@@ -219,11 +219,11 @@ void I2C_Init(void) /* This Function is for Initialize the I2C peripheral. */
 	
 	/* ------- Initialize Prescaler & Bit rate ------- */
 	
-	_I2C_SR = _PRESCALER; /* Prescaler = 1 */
-	_I2C_BR = (uint8_t)( ( (_F_CPU / _F_SCL) - 16 ) / (2 * _PRESCALER) ); /* Calculate and set i2c bit rate */
+	TWSR = _PRESCALER; /* Prescaler = 1 */
+	TWBR = (uint8_t)( ( (_F_CPU / _F_SCL) - 16 ) / (2 * _PRESCALER) ); /* Calculate and set i2c bit rate */
 
 	/* ----------------------------------------------- */
-	_I2C_CR = (1 << TWEN); /* Enable TWI  module */
+	TWCR = (1 << TWEN); /* Enable TWI  module */
 	
 }
 /*

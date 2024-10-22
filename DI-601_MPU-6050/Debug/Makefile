@@ -42,7 +42,6 @@ C_SRCS +=  \
 ../GPIO/gpio_unit.c \
 ../HW_Init.c \
 ../I2C_UNIT/i2c_unit.c \
-../intfx.c \
 ../main.c \
 ../mpu6050.c
 
@@ -57,7 +56,6 @@ OBJS +=  \
 GPIO/gpio_unit.o \
 HW_Init.o \
 I2C_UNIT/i2c_unit.o \
-intfx.o \
 main.o \
 mpu6050.o
 
@@ -65,7 +63,6 @@ OBJS_AS_ARGS +=  \
 GPIO/gpio_unit.o \
 HW_Init.o \
 I2C_UNIT/i2c_unit.o \
-intfx.o \
 main.o \
 mpu6050.o
 
@@ -73,7 +70,6 @@ C_DEPS +=  \
 GPIO/gpio_unit.d \
 HW_Init.d \
 I2C_UNIT/i2c_unit.d \
-intfx.d \
 main.d \
 mpu6050.d
 
@@ -81,7 +77,6 @@ C_DEPS_AS_ARGS +=  \
 GPIO/gpio_unit.d \
 HW_Init.d \
 I2C_UNIT/i2c_unit.d \
-intfx.d \
 main.d \
 mpu6050.d
 
@@ -114,13 +109,6 @@ GPIO/gpio_unit.o: ../GPIO/gpio_unit.c
 	
 
 I2C_UNIT/i2c_unit.o: ../I2C_UNIT/i2c_unit.c
-	@echo Building file: $<
-	@echo Invoking: AVR/GNU C Compiler : 5.4.0
-	$(QUOTE)C:\Program Files (x86)\Atmel\Studio\7.0\toolchain\avr8\avr8-gnu-toolchain\bin\avr-gcc.exe$(QUOTE)  -x c -funsigned-char -funsigned-bitfields -DDEBUG  -I"C:\Program Files (x86)\Atmel\Studio\7.0\Packs\Atmel\ATmega_DFP\1.7.374\include"  -O1 -ffunction-sections -fdata-sections -fpack-struct -fshort-enums -g2 -Wall -mmcu=atmega8 -B "C:\Program Files (x86)\Atmel\Studio\7.0\Packs\Atmel\ATmega_DFP\1.7.374\gcc\dev\atmega8" -c -std=gnu99 -MD -MP -MF "$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -MT"$(@:%.o=%.o)"   -o "$@" "$<" 
-	@echo Finished building: $<
-	
-
-./intfx.o: .././intfx.c
 	@echo Building file: $<
 	@echo Invoking: AVR/GNU C Compiler : 5.4.0
 	$(QUOTE)C:\Program Files (x86)\Atmel\Studio\7.0\toolchain\avr8\avr8-gnu-toolchain\bin\avr-gcc.exe$(QUOTE)  -x c -funsigned-char -funsigned-bitfields -DDEBUG  -I"C:\Program Files (x86)\Atmel\Studio\7.0\Packs\Atmel\ATmega_DFP\1.7.374\include"  -O1 -ffunction-sections -fdata-sections -fpack-struct -fshort-enums -g2 -Wall -mmcu=atmega8 -B "C:\Program Files (x86)\Atmel\Studio\7.0\Packs\Atmel\ATmega_DFP\1.7.374\gcc\dev\atmega8" -c -std=gnu99 -MD -MP -MF "$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -MT"$(@:%.o=%.o)"   -o "$@" "$<" 
