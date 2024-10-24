@@ -57,7 +57,7 @@ uint8_t I2C_BeginTransmission(uint16_t time_out) /* Function for send START cond
 	/* --------------------------- */
 	while ( (!(_I2C_CR & (1 << TWINT))) && (time_out > 0) ) /* Wait for TWINT Flag set. This indicates that the START condition has been transmitted. */
 	{
-		_DELAY_MS(1);
+		_delay_ms(1);
 		time_out--;
 	}
 	
@@ -90,7 +90,7 @@ uint8_t I2C_Transmit(uint8_t data , uint16_t time_out) /* Function for transmit 
 	/* --------------------------- */
 	while ( (!(_I2C_CR & (1 << TWINT))) && (time_out > 0)) /* Wait for TWINT Flag set. This indicates that the START condition has been transmitted. */
 	{
-		_DELAY_MS(1);
+		_delay_ms(1);
 		time_out--;
 	}
 	
@@ -121,7 +121,7 @@ uint8_t I2C_ReceiveACK(uint16_t time_out) /* Function for receive data with ACK 
 	/* --------------------------- */
 	while ( (!(_I2C_CR & (1 << TWINT))) && (time_out > 0)) /* Wait for TWINT Flag set. This indicates that the START condition has been transmitted. */
 	{
-		_DELAY_MS(1);
+		_delay_ms(1);
 		time_out--;
 	}
 	
@@ -151,7 +151,7 @@ uint8_t I2C_ReceiveNACK(uint16_t time_out) /* Function for receive data with no 
 	/* --------------------------- */
 	while ( (!(_I2C_CR & (1 << TWINT))) && (time_out > 0)) /* Wait for TWINT Flag set. This indicates that the START condition has been transmitted. */
 	{
-		_DELAY_MS(1);
+		_delay_ms(1);
 		time_out--;
 	}
 	
@@ -181,7 +181,7 @@ void I2C_EndTransmission(uint16_t time_out) /* Function for stop transmission I2
 	/* --------------------------- */
 	while ( (_I2C_CR & (1 << TWSTO)) && (time_out > 0)) /* Wait for TWSTO Flag reset. */
 	{
-		_DELAY_MS(1);
+		_delay_ms(1);
 		time_out--;
 	}
 	
@@ -267,8 +267,8 @@ uint8_t I2C_IsDeviceReady(uint8_t dev_address , uint16_t trials , uint16_t time_
 	
 	/* ^^^^^^^^^^^^^^^^^^^^ Reinitialize I2C ^^^^^^^^^^^^^^^^^^^^^ */
 	
-	I2C_DeInit(); /* DeInitialize i2c */
-	I2C_Init(); /* Initialize i2c */
+	//I2C_DeInit(); /* DeInitialize i2c */
+	//I2C_Init(); /* Initialize i2c */
 	
 	/* ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ */
 	

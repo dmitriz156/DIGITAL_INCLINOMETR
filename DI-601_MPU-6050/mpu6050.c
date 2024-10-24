@@ -35,6 +35,7 @@
 */
 
 #include "MPU6050.h"
+#include "main.h"
 
 /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Var ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 static uint8_t g_mpu_com_resp = _MPU_ERROR;
@@ -161,17 +162,27 @@ uint8_t MPU6050_BurstRead(uint8_t address , uint8_t *udata, uint8_t size, uint16
 	g_mpu_com_resp = _MPU_ERROR; /* Variable for check status */
 	
 	/* ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ */
-	
-	if ( MPU6050_IsReady(_time_out) == _MPU_OK ) /* Check Connection */
-	{
-		
-		g_mpu_com_resp = _I2C_MEM_READ(_MPU6050_ADD, address, _MPU6050_MEMADD_SIZE, udata, size, _time_out); /* Write data */
-		
-	}
-	
+	LED = 1;	
+	g_mpu_com_resp = _I2C_MEM_READ(_MPU6050_ADD, address, _MPU6050_MEMADD_SIZE, udata, size, _time_out); /* Write data */
+	LED = 0;
 	return g_mpu_com_resp;
 
 }
+
+// uint8_t MPU6050_BurstRead(uint8_t address , uint8_t *udata, uint8_t size, uint16_t _time_out) /* Function for read Burst Byte Data from MPU6050 register */
+// {
+// 	/* ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ */
+// 	
+// 	g_mpu_com_resp = _MPU_ERROR; /* Variable for check status */
+// 	
+// 	/* ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ */
+// 	if ( MPU6050_IsReady(_time_out) == _MPU_OK ) /* Check Connection */
+// 	{
+// 		g_mpu_com_resp = _I2C_MEM_READ(_MPU6050_ADD, address, _MPU6050_MEMADD_SIZE, udata, size, _time_out); /* Write data */
+// 	}
+// 	return g_mpu_com_resp;
+// 
+// }
 /*
   Example :
            
@@ -322,7 +333,7 @@ uint8_t MPU6050_AutoInit(uint16_t _time_out) /* Function for initialize MPU6050 
 	MPU6050_Config.InterruptConfig.IntOpen    = _INT_OPEN_PUSH_PULL; /* Set pin mode to push pull */
 	MPU6050_Config.InterruptConfig.IntLevel   = _INT_LEVEL_ACTIVE_HIGH; /* Set pin level to Active high */
 	MPU6050_Config.InterruptConfig.LatchIntEn = _LATCH_INT_EN_50US_PULSE; /* Set the INT pin emits a 50us long pulse */
-	MPU6050_Config.GyroFullScaleRange         = _GYRO_FULL_SCALE_RANGE_2000; /* Full scale range +/- 2000 degree/S */
+	MPU6050_Config.GyroFullScaleRange         = _GYRO_FULL_SCALE_RANGE_250; /* Full scale range +/- 2000 degree/S */
 	MPU6050_Config.AccelFullScaleRange        = _ACCEL_FULL_SCALE_RANGE_2G; /* Full scale range 16g */
 	MPU6050_Config.ClockSelection             = _CLKSEL_X_AXIS_GYROSCOPE_REFERENCE; /* X axis gyroscope reference frequency */
 	

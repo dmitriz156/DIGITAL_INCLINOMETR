@@ -68,6 +68,11 @@ volatile float X_angle = 0;
 volatile float Y_angle = 0;
 volatile float Z_angle = 0;
 
+uint8_t UART_NeedToSend = 0;
+uint8_t sensitivity = 0;
+int16_t MAX_Accel_Value_X = 0;
+int16_t MAX_Accel_Value_Z = 0;
+
 volatile float filtered_X;
 volatile float filtered_Y;
 volatile float filtered_Z;
@@ -96,7 +101,9 @@ volatile uint8_t tx_buffer[DATA_PACKAGE_SIZE];
 
 volatile uint8_t Address_Change_Counter = 0;
 volatile bool Address_Change_FLAG = 0;
-volatile bool Enable_Flag = 0;
+volatile bool UART_RX_Complete_FLAG = 0;
+volatile bool UART_TX_Complete_FLAG = 0;
+volatile uint8_t UART_TX_Pre_Counter = 0;
 volatile data_type_t Angle_Type = 0;
 volatile uint8_t Sensor_Addres = ANGLE_SENS_ADDRESS_1;
 bool AvrgFLAG = 0;
@@ -108,7 +115,7 @@ bool rx_buffer_overflow;
 #define KOEF			0.98
 #define KALMAN_ACEL_Q	0.01//0.01
 #define KALMAN_GYRO_Q	0.05//0.03
-#define KALMAN_R		0.4//0.015
+#define KALMAN_R		0.1//0.015
 
 // Функція для розбиття значення типу float на масив байтів uint8_t
 void float_to_byte(float value, uint8_t *array, int start_index) {
@@ -140,6 +147,7 @@ int main(void)
 	
 	/* MPU6050 Init */
 	MPU6050_AutoInit(100);
+	Timer_2_Init();
 	UART_Init(UBRR_SPEED);
 	RX_TX_DIRECTION = 1;
 	LED_OUT = 1;
@@ -148,26 +156,24 @@ int main(void)
 	/* ---------------------------------------- */
     while (1) 
     {
-		LED = 1;
 // 		MPU6050_GetGyro(Gyro_Data_arr, 100);
 // 		MPU6050_GetAccel(Accel_Data_arr, 100);
+
+// 		MPU6050_GetRawAccelX(&All_Axis_ROW.Xaccel_raw, 100);...Y,Z
+// 		MPU6050_GetRawGyroX(&All_Axis_ROW.Xgyro_raw, 100);...
+
 		
-		MPU6050_GetRawAccelX(&All_Axis_ROW.Xaccel_raw, 20);
-		MPU6050_GetRawAccelY(&All_Axis_ROW.Yaccel_raw, 20);
-		MPU6050_GetRawAccelZ(&All_Axis_ROW.Zaccel_raw, 20);
-		MPU6050_GetRawGyroX(&All_Axis_ROW.Xgyro_raw, 20);
-		MPU6050_GetRawGyroY(&All_Axis_ROW.Ygyro_raw, 20);
-		MPU6050_GetRawGyroZ(&All_Axis_ROW.Zgyro_raw, 20);
-		LED = 0;
+		MPU6050_GetRawAccel(&All_Axis_ROW.Xaccel_raw, 20);
+		MPU6050_GetRawGyro(&All_Axis_ROW.Xgyro_raw, 20);
 		//wdt_reset();
 // 		MPU6050_GetAccelAngleX(&x_accel, 100);
 // 		MPU6050_GetGyroX(&x_gyro, 100);
 		All_Axis.x_accel = ( _MPU_RAD_TO_DEG * ( atan2( -All_Axis_ROW.Yaccel_raw , -All_Axis_ROW.Zaccel_raw ) + _MATH_PI ) );
 		All_Axis.y_accel = ( _MPU_RAD_TO_DEG * ( atan2( -All_Axis_ROW.Xaccel_raw , -All_Axis_ROW.Zaccel_raw ) + _MATH_PI ) );
 		All_Axis.z_accel = ( _MPU_RAD_TO_DEG * ( atan2( -All_Axis_ROW.Yaccel_raw , -All_Axis_ROW.Xaccel_raw ) + _MATH_PI ) );
-		All_Axis.x_gyro = ((All_Axis_ROW.Xgyro_raw /*- offsetGX*/) / _MPU_GYRO_SENS_2000_SENS /*/ (1000 / 120)*/);
-		All_Axis.y_gyro = ((All_Axis_ROW.Ygyro_raw /*- offsetGY*/) / _MPU_GYRO_SENS_2000_SENS /*/ (1000 / 120)*/);
-		All_Axis.z_gyro = ((All_Axis_ROW.Zgyro_raw /*- offsetGZ*/) / _MPU_GYRO_SENS_2000_SENS /*/ (1000 / 120)*/);
+		All_Axis.x_gyro = ((All_Axis_ROW.Xgyro_raw /*- offsetGX*/) / _MPU_GYRO_SENS_250_SENS /*/ (1000 / 120)*/);
+		All_Axis.y_gyro = ((All_Axis_ROW.Ygyro_raw /*- offsetGY*/) / _MPU_GYRO_SENS_250_SENS /*/ (1000 / 120)*/);
+		All_Axis.z_gyro = ((All_Axis_ROW.Zgyro_raw /*- offsetGZ*/) / _MPU_GYRO_SENS_250_SENS /*/ (1000 / 120)*/);
 
 // 		//===============Complementary filter begin================
 // 		filtered_Y = (int16_t)((0.98 * y_accel) - (0.02 * y_gyro));
@@ -179,7 +185,7 @@ int main(void)
 // 		y_accel_OLD = y_accel;
 // 		//========================================================
 		//X_angle = kalman_filter(x_accel, x_gyro, 110);
-		Y_angle = kalman_filter(All_Axis.y_accel, All_Axis.y_gyro, 110);
+		Y_angle = kalman_filter(All_Axis.y_accel, All_Axis.y_gyro, 51.0);
 		//Z_angle = kalman_filter(z_accel, z_gyro, 110); //t prev = 120
 	//====================================Output depending on the type BEGIN======================================
 		if (Angle_Type == RB_DATA_TYPE){
@@ -190,10 +196,22 @@ int main(void)
 		}else{
 			Y_angle = Y_angle - 360.0;
 		}
+		
 		if (Angle_Type == BOLLARD_DATA_TYPE)
 		{
-			//x_gyro
-			//Z_gyro
+			if (abs(All_Axis_ROW.Yaccel_raw) > 12000)
+			{
+				if (All_Axis_ROW.Xaccel_raw > sensitivity)
+				{
+				}
+				if (UART_TX_Pre_Counter == 1){}
+				if(MAX_Accel_Value_X < All_Axis_ROW.Xaccel_raw){
+					MAX_Accel_Value_X = All_Axis_ROW.Xaccel_raw;
+				}
+				if(MAX_Accel_Value_Z < All_Axis_ROW.Zaccel_raw){
+					MAX_Accel_Value_Z = All_Axis_ROW.Zaccel_raw;
+				}
+			}
 		}
 	//=====================================Output depending on the type END=======================================
 	#ifdef DEBUG_MOD
@@ -244,20 +262,19 @@ float kalman_filter(float measured_angle, float gyro_rate, float dt) {
 void arduino_ploter(void)
 {
 	TX_ON;
-	//LED = !LED;
+	LED = !LED;
 	//Xgyro_int = (int)Gyro_Data_arr [0];
 	
 	//====!!!!!!!!!!!====cod to display in arduino ide monitor=====!!!!!!!!!=======
-	//UART_Transmit_String("X:,Y:,Z:,X_f:,Y_f:,Z_f:\r\n");
-	UART_Transmit_String("Xa:,Ya:,Za:\r\n");
+	UART_Transmit_String("Xa:,Ya:,Za:,Xgy:,Ygy:,Zgy:\r\n");
 
-	UART_PrintLn("%d,%d,%d", All_Axis_ROW.Xaccel_raw, All_Axis_ROW.Yaccel_raw, All_Axis_ROW.Zaccel_raw);
+	UART_PrintLn("%d,%d,%d,%d,%d,%d", All_Axis_ROW.Xaccel_raw, All_Axis_ROW.Yaccel_raw, All_Axis_ROW.Zaccel_raw, All_Axis_ROW.Xgyro_raw, All_Axis_ROW.Ygyro_raw, All_Axis_ROW.Zgyro_raw);
 	//UART_PrintLn("%d,%d,%d", Xaccel_int, Yaccel_int, Zaccel_int); //%.2f
 }
 
-void UART_serialize_package(void)
+void UART_data_procesing(void)
 {
-	if ( (rx_buffer[0] == Sensor_Addres) && (Enable_Flag == 1) && (crc(rx_buffer, DATA_PACKAGE_SIZE-1) == rx_buffer[6]))
+	if ( (rx_buffer[0] == Sensor_Addres) && (crc(rx_buffer, DATA_PACKAGE_SIZE-1) == rx_buffer[6]))
 	{
 		Angle_Type = rx_buffer[2];
 		
@@ -266,7 +283,7 @@ void UART_serialize_package(void)
 			if (Address_Change_Counter < 10)
 			{
 				Address_Change_Counter ++;
-				}else{
+			}else{
 				Sensor_Addres = rx_buffer[4];
 				Address_Change_Counter = 0;
 			}
@@ -275,20 +292,23 @@ void UART_serialize_package(void)
 		}
 		memset(rx_buffer, 0, DATA_PACKAGE_SIZE);
 		
-		TX_ON;
 		memset(tx_buffer, 0, DATA_PACKAGE_SIZE);
 		tx_buffer[0] = Sensor_Addres;
-		float_to_byte(Y_angle, tx_buffer, 1);
-		tx_buffer[5] = Sensor_Addres;
+		if (Angle_Type == RB_DATA_TYPE || Angle_Type == MODULAR_RB_DATA_TYPE)
+		{
+			float_to_byte(Y_angle, tx_buffer, 1);
+			tx_buffer[5] = Sensor_Addres;
+		}
+		if (Angle_Type == BOLLARD_DATA_TYPE)
+		{
+			tx_buffer[1] = (MAX_Accel_Value_X >> 8) & 0xFF;//MSB
+			tx_buffer[2] = MAX_Accel_Value_X & 0xFF;//LSB
+			tx_buffer[3] = (MAX_Accel_Value_Z >> 8) & 0xFF;
+			tx_buffer[4] = MAX_Accel_Value_Z & 0xFF;
+			MAX_Accel_Value_X = 0;
+			MAX_Accel_Value_Z = 0;
+		}
 		tx_buffer[6] = crc(tx_buffer, DATA_PACKAGE_SIZE-1);           //обрахувати контрольну суму і вислати останнім байтом
-		_delay_ms(1);
-
-		Enable_Flag = 0;
-		
-		UCSRB |= (1 << TXB8);
-		tx_counter = (DATA_PACKAGE_SIZE-1);
-		//Передавання пакету данних
-		UDR = tx_buffer[0];
 
 	}
 }
@@ -312,6 +332,27 @@ uint8_t crc( uint8_t *code, uint8_t size)
 }
 //----------------------------------------------------------------------------------
 
+ISR(TIMER2_COMP_vect) {
+	// Код, який виконується кожну 1 мс
+	if (UART_RX_Complete_FLAG)
+	{
+		/*LED = !LED;*/
+		UART_data_procesing();
+		UART_RX_Complete_FLAG = 0;
+		UART_TX_Pre_Counter = 1;
+		return;
+	}
+	if (UART_TX_Pre_Counter)
+	{
+		UART_TX_Pre_Counter = 0;
+		TX_ON;
+		UCSRB |= (1 << TXB8);
+		tx_counter = (DATA_PACKAGE_SIZE-1);
+		//Передавання пакету данних
+		UDR = tx_buffer[0];
+	}
+}
+
 ISR(USART_RXC_vect)
 {
 	//first_bit = (UCSRB & (1 << RXB8));
@@ -329,43 +370,7 @@ ISR(USART_RXC_vect)
 	}
 	else
 	{
-		//LED = !LED;
-		Enable_Flag = 1;
-		if ( (rx_buffer[0] == Sensor_Addres) && (Enable_Flag == 1) && (crc(rx_buffer, DATA_PACKAGE_SIZE-1) == rx_buffer[6]))
-		{
-			Angle_Type = rx_buffer[2];
-			
-			if (rx_buffer[3] == ADDRESS_CHANGE_KEY)
-			{
-				if (Address_Change_Counter < 10)
-				{
-					Address_Change_Counter ++;
-				}else{
-					Sensor_Addres = rx_buffer[4];
-					Address_Change_Counter = 0;
-				}
-			}else{
-				Address_Change_Counter = 0;
-			}
-			memset(rx_buffer, 0, DATA_PACKAGE_SIZE);
-			
-			TX_ON;
-			memset(tx_buffer, 0, DATA_PACKAGE_SIZE);
-			tx_buffer[0] = Sensor_Addres;
-			float_to_byte(Y_angle, tx_buffer, 1);
-			tx_buffer[5] = Sensor_Addres;	
-			tx_buffer[6] = crc(tx_buffer, DATA_PACKAGE_SIZE-1);           //обрахувати контрольну суму і вислати останнім байтом
-			_delay_ms(1);
-
-			Enable_Flag = 0;
-			
-			UCSRB |= (1 << TXB8);
-			tx_counter = (DATA_PACKAGE_SIZE-1);
-			//Передавання пакету данних
-			UDR = tx_buffer[0];
-
-		}
-		//else{TX_ON = 0;}
+		UART_RX_Complete_FLAG = 1;
 	}
 }
 
@@ -387,6 +392,13 @@ ISR(USART_TXC_vect)
 }
 
 /* ======================================================================================================*/
+
+void Timer_2_Init(void)
+{
+	TCCR2 |= (1 << CS22) | (1 << WGM21);//pres 64, Clear Timer on Compare Match mod
+	TIMSK |= (1 << OCIE2);
+	OCR2 = 230;
+}
 
 void UART_Init(uint16_t ubrr_value)
 {

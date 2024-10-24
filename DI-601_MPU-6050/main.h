@@ -77,16 +77,15 @@ typedef struct {
 
 uint8_t crc( uint8_t *code, uint8_t size);
 
-// USART Receiver interrupt service routine
+ISR(TIMER2_COMP_vect);
 ISR(USART_RXC_vect);
-
-// USART Transmitter interrupt service routine
 ISR(USART_TXC_vect);
 
 // Write a character to the USART Transmitter buffer
 void Putchar(char c);
-
+void Timer_2_Init(void);
 void UART_Init(uint16_t ubrr_value);
+void UART_data_procesing(void);
 void UART_Transmit(char data);
 void UART_Transmit_String(const char *str);
 void UART_Print(const char *format, ...);
