@@ -14,7 +14,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#define DEBUG_MOD
+//#define DEBUG_MOD
 #define UART_BUFFER_SIZE		128
 /*===============Constants that determine the types of protractors=================*/
 // #define MODULAR_RB_DATA_TYPE		0xAA
@@ -196,21 +196,28 @@ int main(void)
 		}else{
 			Y_angle = Y_angle - 360.0;
 		}
-		
-		if (Angle_Type == BOLLARD_DATA_TYPE)
+		bool temp_flag;
+		#ifdef DEBUG_MOD
+		temp_flag = 1;
+		#endif
+		if (Angle_Type == BOLLARD_DATA_TYPE || temp_flag)
 		{
 			if (abs(All_Axis_ROW.Yaccel_raw) > 12000)
 			{
 				if (All_Axis_ROW.Xaccel_raw > sensitivity)
 				{
 				}
-				if (UART_TX_Pre_Counter == 1){}
-				if(MAX_Accel_Value_X < All_Axis_ROW.Xaccel_raw){
+				if(abs(MAX_Accel_Value_X) < abs(All_Axis_ROW.Xaccel_raw)){
 					MAX_Accel_Value_X = All_Axis_ROW.Xaccel_raw;
 				}
-				if(MAX_Accel_Value_Z < All_Axis_ROW.Zaccel_raw){
+				if(abs(MAX_Accel_Value_Z) < abs(All_Axis_ROW.Zaccel_raw)){
 					MAX_Accel_Value_Z = All_Axis_ROW.Zaccel_raw;
 				}
+			}
+			else
+			{
+				MAX_Accel_Value_X = 911;
+				MAX_Accel_Value_Z = 911;
 			}
 		}
 	//=====================================Output depending on the type END=======================================
@@ -262,14 +269,15 @@ float kalman_filter(float measured_angle, float gyro_rate, float dt) {
 void arduino_ploter(void)
 {
 	TX_ON;
-	LED = !LED;
-	//Xgyro_int = (int)Gyro_Data_arr [0];
 	
 	//====!!!!!!!!!!!====cod to display in arduino ide monitor=====!!!!!!!!!=======
-	UART_Transmit_String("Xa:,Ya:,Za:,Xgy:,Ygy:,Zgy:\r\n");
-
-	UART_PrintLn("%d,%d,%d,%d,%d,%d", All_Axis_ROW.Xaccel_raw, All_Axis_ROW.Yaccel_raw, All_Axis_ROW.Zaccel_raw, All_Axis_ROW.Xgyro_raw, All_Axis_ROW.Ygyro_raw, All_Axis_ROW.Zgyro_raw);
-	//UART_PrintLn("%d,%d,%d", Xaccel_int, Yaccel_int, Zaccel_int); //%.2f
+	//UART_Transmit_String("Xa:,Ya:,Za:,Xgy:,Ygy:,Zgy:\r\n");
+	//%.2f
+	//UART_PrintLn("%d,%d,%d,%d,%d,%d", All_Axis_ROW.Xaccel_raw, All_Axis_ROW.Yaccel_raw, All_Axis_ROW.Zaccel_raw, All_Axis_ROW.Xgyro_raw, All_Axis_ROW.Ygyro_raw, All_Axis_ROW.Zgyro_raw);
+	UART_Transmit_String("MAX_A_X:,MAX_A_Z:\r\n");
+	UART_PrintLn("%d,%d", MAX_Accel_Value_X, MAX_Accel_Value_Z);
+	MAX_Accel_Value_X = 0;
+	MAX_Accel_Value_Z = 0;
 }
 
 void UART_data_procesing(void)
@@ -297,10 +305,10 @@ void UART_data_procesing(void)
 		if (Angle_Type == RB_DATA_TYPE || Angle_Type == MODULAR_RB_DATA_TYPE)
 		{
 			float_to_byte(Y_angle, tx_buffer, 1);
-			tx_buffer[5] = Sensor_Addres;
 		}
 		if (Angle_Type == BOLLARD_DATA_TYPE)
 		{
+			LED = !LED;
 			tx_buffer[1] = (MAX_Accel_Value_X >> 8) & 0xFF;//MSB
 			tx_buffer[2] = MAX_Accel_Value_X & 0xFF;//LSB
 			tx_buffer[3] = (MAX_Accel_Value_Z >> 8) & 0xFF;
@@ -308,6 +316,7 @@ void UART_data_procesing(void)
 			MAX_Accel_Value_X = 0;
 			MAX_Accel_Value_Z = 0;
 		}
+		tx_buffer[5] = Sensor_Addres;
 		tx_buffer[6] = crc(tx_buffer, DATA_PACKAGE_SIZE-1);           //обрахувати контрольну суму і вислати останнім байтом
 
 	}
