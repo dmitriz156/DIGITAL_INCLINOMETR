@@ -71,6 +71,7 @@ volatile float Z_angle = 0;
 uint8_t UART_NeedToSend = 0;
 uint8_t sensitivity = 0;
 int16_t MAX_Accel_Value_X = 0;
+int16_t MAX_Accel_Value_Y = 0;
 int16_t MAX_Accel_Value_Z = 0;
 
 volatile float filtered_X;
@@ -105,7 +106,7 @@ volatile bool UART_RX_Complete_FLAG = 0;
 volatile bool UART_TX_Complete_FLAG = 0;
 volatile uint8_t UART_TX_Pre_Counter = 0;
 volatile data_type_t Angle_Type = 0;
-volatile uint8_t Sensor_Addres = ANGLE_SENS_ADDRESS_1;
+volatile uint8_t Sensor_Addres = ANGLE_SENS_ADDRESS_2;
 bool AvrgFLAG = 0;
 uint8_t rx_counter, rx_counter;
 // This flag is set on USART Receiver buffer overflow
@@ -202,23 +203,27 @@ int main(void)
 		#endif
 		if (Angle_Type == BOLLARD_DATA_TYPE || temp_flag)
 		{
-			if (abs(All_Axis_ROW.Yaccel_raw) > 12000)
-			{
+// 			if (abs(All_Axis_ROW.Yaccel_raw) > 12000)
+// 			{
 				if (All_Axis_ROW.Xaccel_raw > sensitivity)
 				{
 				}
 				if(abs(MAX_Accel_Value_X) < abs(All_Axis_ROW.Xaccel_raw)){
 					MAX_Accel_Value_X = All_Axis_ROW.Xaccel_raw;
 				}
+				if(abs(MAX_Accel_Value_Y) < abs(All_Axis_ROW.Yaccel_raw)){
+					MAX_Accel_Value_Y = All_Axis_ROW.Yaccel_raw;
+				}
 				if(abs(MAX_Accel_Value_Z) < abs(All_Axis_ROW.Zaccel_raw)){
 					MAX_Accel_Value_Z = All_Axis_ROW.Zaccel_raw;
 				}
-			}
-			else
-			{
-				MAX_Accel_Value_X = 911;
-				MAX_Accel_Value_Z = 911;
-			}
+// 			}
+// 			else
+// 			{
+// 				MAX_Accel_Value_X = 911;
+// 				MAX_Accel_Value_Y = 911;
+// 				MAX_Accel_Value_Z = 911;
+// 			}
 		}
 	//=====================================Output depending on the type END=======================================
 	#ifdef DEBUG_MOD
@@ -274,9 +279,10 @@ void arduino_ploter(void)
 	//UART_Transmit_String("Xa:,Ya:,Za:,Xgy:,Ygy:,Zgy:\r\n");
 	//%.2f
 	//UART_PrintLn("%d,%d,%d,%d,%d,%d", All_Axis_ROW.Xaccel_raw, All_Axis_ROW.Yaccel_raw, All_Axis_ROW.Zaccel_raw, All_Axis_ROW.Xgyro_raw, All_Axis_ROW.Ygyro_raw, All_Axis_ROW.Zgyro_raw);
-	UART_Transmit_String("MAX_A_X:,MAX_A_Z:\r\n");
-	UART_PrintLn("%d,%d", MAX_Accel_Value_X, MAX_Accel_Value_Z);
+	UART_Transmit_String("MAX_A_X:,MAX_A_Y:,MAX_A_Z:\r\n");
+	UART_PrintLn("%d,%d,%d", MAX_Accel_Value_X, MAX_Accel_Value_Y, MAX_Accel_Value_Z);
 	MAX_Accel_Value_X = 0;
+	MAX_Accel_Value_Y = 0;
 	MAX_Accel_Value_Z = 0;
 }
 
@@ -295,7 +301,7 @@ void UART_data_procesing(void)
 				Sensor_Addres = rx_buffer[4];
 				Address_Change_Counter = 0;
 			}
-			}else{
+		}else{
 			Address_Change_Counter = 0;
 		}
 		memset(rx_buffer, 0, DATA_PACKAGE_SIZE);
@@ -308,17 +314,28 @@ void UART_data_procesing(void)
 		}
 		if (Angle_Type == BOLLARD_DATA_TYPE)
 		{
-			LED = !LED;
-			tx_buffer[1] = (MAX_Accel_Value_X >> 8) & 0xFF;//MSB
-			tx_buffer[2] = MAX_Accel_Value_X & 0xFF;//LSB
-			tx_buffer[3] = (MAX_Accel_Value_Z >> 8) & 0xFF;
-			tx_buffer[4] = MAX_Accel_Value_Z & 0xFF;
+			if (MAX_Accel_Value_X > MAX_Accel_Value_Z)
+			{
+				tx_buffer[1] = (MAX_Accel_Value_X >> 8) & 0xFF;//MSB
+				tx_buffer[2] = MAX_Accel_Value_X & 0xFF;//LSB
+			}
+			else
+			{
+				tx_buffer[1] = (MAX_Accel_Value_Z >> 8) & 0xFF;//MSB
+				tx_buffer[2] = MAX_Accel_Value_Z & 0xFF;//LSB
+			}
+			
+			tx_buffer[3] = (MAX_Accel_Value_Y >> 8) & 0xFF;
+			tx_buffer[4] = MAX_Accel_Value_Y & 0xFF;
+			
 			MAX_Accel_Value_X = 0;
+			MAX_Accel_Value_Y = 0;
 			MAX_Accel_Value_Z = 0;
 		}
 		tx_buffer[5] = Sensor_Addres;
 		tx_buffer[6] = crc(tx_buffer, DATA_PACKAGE_SIZE-1);           //обрахувати контрольну суму і вислати останнім байтом
-
+		
+		UART_TX_Pre_Counter = 1;
 	}
 }
 
@@ -348,13 +365,13 @@ ISR(TIMER2_COMP_vect) {
 		/*LED = !LED;*/
 		UART_data_procesing();
 		UART_RX_Complete_FLAG = 0;
-		UART_TX_Pre_Counter = 1;
 		return;
 	}
 	if (UART_TX_Pre_Counter)
 	{
 		UART_TX_Pre_Counter = 0;
 		TX_ON;
+		LED = 1;
 		UCSRB |= (1 << TXB8);
 		tx_counter = (DATA_PACKAGE_SIZE-1);
 		//Передавання пакету данних
@@ -396,6 +413,7 @@ ISR(USART_TXC_vect)
 	}
 	else
 	{
+		LED = 0;
 		RX_ON;
 	}
 }
