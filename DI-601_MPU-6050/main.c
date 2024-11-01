@@ -14,7 +14,8 @@
 #include <stdio.h>
 #include <string.h>
 
-//#define DEBUG_MOD
+#define DEBUG_MOD
+
 #define UART_BUFFER_SIZE		128
 /*===============Constants that determine the types of protractors=================*/
 // #define MODULAR_RB_DATA_TYPE		0xAA
@@ -106,7 +107,7 @@ volatile bool UART_RX_Complete_FLAG = 0;
 volatile bool UART_TX_Complete_FLAG = 0;
 volatile uint8_t UART_TX_Pre_Counter = 0;
 volatile data_type_t Angle_Type = 0;
-volatile uint8_t Sensor_Addres = ANGLE_SENS_ADDRESS_2;
+volatile uint8_t Sensor_Addres = ANGLE_SENS_ADDRESS_1;
 bool AvrgFLAG = 0;
 uint8_t rx_counter, rx_counter;
 // This flag is set on USART Receiver buffer overflow
@@ -139,6 +140,7 @@ float byte_to_float(uint8_t *array, int start_index) {
 	return value;
 }
 
+
 int main(void)
 {
 	sei();
@@ -157,18 +159,35 @@ int main(void)
 	/* ---------------------------------------- */
     while (1) 
     {
-// 		MPU6050_GetGyro(Gyro_Data_arr, 100);
-// 		MPU6050_GetAccel(Accel_Data_arr, 100);
 
-// 		MPU6050_GetRawAccelX(&All_Axis_ROW.Xaccel_raw, 100);...Y,Z
-// 		MPU6050_GetRawGyroX(&All_Axis_ROW.Xgyro_raw, 100);...
-
-		
+		LED = 1;
 		MPU6050_GetRawAccel(&All_Axis_ROW.Xaccel_raw, 20);
 		MPU6050_GetRawGyro(&All_Axis_ROW.Xgyro_raw, 20);
+		
+		//===
+		
+// 		uint8_t raw_accel[_MPU_AXIS_ALL_REG_LEGTH];
+// 		I2C_Mem_Read_My(_MPU6050_ADD, _REG_ACCEL_XOUT_H, _I2C_MEMADD_SIZE_8BIT, raw_accel, _MPU_AXIS_ALL_REG_LEGTH, 20);
+// 		//memcpy(All_Axis_ROW.Xaccel_raw, raw_accel, _MPU_AXIS_ALL_REG_LEGTH);
+// 		
+// 		uint8_t raw_gyro[_MPU_AXIS_ALL_REG_LEGTH];
+// 		I2C_Mem_Read_My(_MPU6050_ADD, _REG_GYRO_XOUT_H, _I2C_MEMADD_SIZE_8BIT, raw_gyro, _MPU_AXIS_ALL_REG_LEGTH, 20);
+// 		//memcpy(All_Axis_ROW.Xgyro_raw, raw_gyro, _MPU_AXIS_ALL_REG_LEGTH);
+// 		
+// 		int16_t *raw_accel_str = &All_Axis_ROW.Xaccel_raw;
+// 		int16_t *raw_gyro_str = &All_Axis_ROW.Xgyro_raw;
+// 		for (uint8_t i = 0; i < _MPU_AXIS_ALL_REG_LEGTH ; i += _MPU_AXIS_REG_LENGTH ) /* Loop for save data to string */
+// 		{
+// 			*raw_accel_str = ( (int16_t)raw_accel[i] << _MPU_HIGH_BYTE_SHIFT ) | (int16_t)raw_accel[i + 1]; /* Write data */
+// 			raw_accel_str++;
+// 			*raw_gyro_str = ( (int16_t)raw_gyro[i] << _MPU_HIGH_BYTE_SHIFT ) | (int16_t)raw_gyro[i + 1]; /* Write data */
+// 			raw_accel_str++;
+// 		}
+		//===
+		
+		LED = 0;
 		//wdt_reset();
-// 		MPU6050_GetAccelAngleX(&x_accel, 100);
-// 		MPU6050_GetGyroX(&x_gyro, 100);
+		
 		All_Axis.x_accel = ( _MPU_RAD_TO_DEG * ( atan2( -All_Axis_ROW.Yaccel_raw , -All_Axis_ROW.Zaccel_raw ) + _MATH_PI ) );
 		All_Axis.y_accel = ( _MPU_RAD_TO_DEG * ( atan2( -All_Axis_ROW.Xaccel_raw , -All_Axis_ROW.Zaccel_raw ) + _MATH_PI ) );
 		All_Axis.z_accel = ( _MPU_RAD_TO_DEG * ( atan2( -All_Axis_ROW.Yaccel_raw , -All_Axis_ROW.Xaccel_raw ) + _MATH_PI ) );
@@ -186,7 +205,7 @@ int main(void)
 // 		y_accel_OLD = y_accel;
 // 		//========================================================
 		//X_angle = kalman_filter(x_accel, x_gyro, 110);
-		Y_angle = kalman_filter(All_Axis.y_accel, All_Axis.y_gyro, 51.0);
+		Y_angle = kalman_filter(All_Axis.y_accel, All_Axis.y_gyro, 27.0);
 		//Z_angle = kalman_filter(z_accel, z_gyro, 110); //t prev = 120
 	//====================================Output depending on the type BEGIN======================================
 		if (Angle_Type == RB_DATA_TYPE){
@@ -203,11 +222,8 @@ int main(void)
 		#endif
 		if (Angle_Type == BOLLARD_DATA_TYPE || temp_flag)
 		{
-// 			if (abs(All_Axis_ROW.Yaccel_raw) > 12000)
-// 			{
-				if (All_Axis_ROW.Xaccel_raw > sensitivity)
-				{
-				}
+			if (abs(All_Axis_ROW.Yaccel_raw) > 12000)
+			{
 				if(abs(MAX_Accel_Value_X) < abs(All_Axis_ROW.Xaccel_raw)){
 					MAX_Accel_Value_X = All_Axis_ROW.Xaccel_raw;
 				}
@@ -217,13 +233,13 @@ int main(void)
 				if(abs(MAX_Accel_Value_Z) < abs(All_Axis_ROW.Zaccel_raw)){
 					MAX_Accel_Value_Z = All_Axis_ROW.Zaccel_raw;
 				}
-// 			}
-// 			else
-// 			{
-// 				MAX_Accel_Value_X = 911;
-// 				MAX_Accel_Value_Y = 911;
-// 				MAX_Accel_Value_Z = 911;
-// 			}
+			}
+			else
+			{
+				MAX_Accel_Value_X = 10;
+				MAX_Accel_Value_Y = 10;
+				MAX_Accel_Value_Z = 10;
+			}
 		}
 	//=====================================Output depending on the type END=======================================
 	#ifdef DEBUG_MOD
@@ -328,9 +344,9 @@ void UART_data_procesing(void)
 			tx_buffer[3] = (MAX_Accel_Value_Y >> 8) & 0xFF;
 			tx_buffer[4] = MAX_Accel_Value_Y & 0xFF;
 			
-			MAX_Accel_Value_X = 0;
-			MAX_Accel_Value_Y = 0;
-			MAX_Accel_Value_Z = 0;
+			MAX_Accel_Value_X = 11;
+			MAX_Accel_Value_Y = 11;
+			MAX_Accel_Value_Z = 11;
 		}
 		tx_buffer[5] = Sensor_Addres;
 		tx_buffer[6] = crc(tx_buffer, DATA_PACKAGE_SIZE-1);           //обрахувати контрольну суму і вислати останнім байтом
@@ -362,7 +378,6 @@ ISR(TIMER2_COMP_vect) {
 	// Код, який виконується кожну 1 мс
 	if (UART_RX_Complete_FLAG)
 	{
-		/*LED = !LED;*/
 		UART_data_procesing();
 		UART_RX_Complete_FLAG = 0;
 		return;
@@ -371,7 +386,6 @@ ISR(TIMER2_COMP_vect) {
 	{
 		UART_TX_Pre_Counter = 0;
 		TX_ON;
-		LED = 1;
 		UCSRB |= (1 << TXB8);
 		tx_counter = (DATA_PACKAGE_SIZE-1);
 		//Передавання пакету данних
@@ -401,7 +415,6 @@ ISR(USART_RXC_vect)
 }
 
 
-// USART Transmitter interrupt service routine
 ISR(USART_TXC_vect)
 {
 	if (tx_counter > 0)
@@ -413,7 +426,6 @@ ISR(USART_TXC_vect)
 	}
 	else
 	{
-		LED = 0;
 		RX_ON;
 	}
 }

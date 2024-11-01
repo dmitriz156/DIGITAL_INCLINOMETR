@@ -849,6 +849,156 @@ StatusTypeDef I2C_Mem_Read(uint8_t dev_address , uint32_t mem_address , uint8_t 
 	
 	/* Function End */
 }
+
+StatusTypeDef I2C_Mem_Read_My(uint8_t dev_address , uint32_t mem_address , uint8_t mem_add_size , uint8_t *mem_data , uint32_t quantity , uint16_t time_out ) /* This function is for read data from external memory */
+{
+	/* ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ */
+	
+	uint8_t i2c_status = 0; /* Variable for check status */
+	uint32_t read_quantity = quantity; /* Variable for check read quantity */
+	uint32_t step_check = 0; /* Variable to check the completed steps */
+	
+	/* ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ */
+	
+	if ( I2C_IsDeviceReady(dev_address , 1 , time_out) == _TRUE ) /* target device is ready */
+	{
+		
+		i2c_status = I2C_BeginTransmission(time_out); /* Begin Transmission */
+		
+		/* --------------------------------- */
+		
+		if ( mem_add_size == _I2C_MEMADD_SIZE_8BIT ) /* Check memory address size */
+		{
+			
+			if ( i2c_status == _MT_START_TRANSMITTED ) /* START condition has been transmitted */
+			{
+				i2c_status = I2C_Transmit( (dev_address | (uint8_t)((mem_address >> _P0_SHIFT_VAL_MEMADD_SIZE_8BIT) & _P0_BIT_SEL_MEMADD_SIZE_8BIT)) , time_out ); /* Send device Address */
+				step_check++; /* The step is completed */
+			}
+			else{}
+			
+			/* ~~~~~~~~~~~~ Send LSB Memory Address ~~~~~~~~~~~~ */
+			
+			if ( i2c_status == _MT_SLA_W_TRANSMITTED_ACK ) /* Data has been transmitted, and ACK has been received. */
+			{
+				i2c_status = I2C_Transmit( (uint8_t)mem_address , time_out ); /* Send second memory Address */
+				step_check++; /* The step is completed */
+			}
+			else{}
+			
+		}
+		else
+		{
+			
+			if ( i2c_status == _MT_START_TRANSMITTED ) /* START condition has been transmitted */
+			{
+				i2c_status = I2C_Transmit( (dev_address | (uint8_t)((mem_address >> _P0_SHIFT_VAL_MEMADD_SIZE_16BIT) & _P0_BIT_SEL_MEMADD_SIZE_16BIT)) , time_out ); /* Send device Address */
+				step_check++; /* The step is completed */
+			}
+			else{}
+			
+			/* ~~~~~~~~~~~~ Send MSB Memory Address ~~~~~~~~~~~~ */
+			
+			if ( i2c_status == _MT_SLA_W_TRANSMITTED_ACK ) /* SLA+W has been transmitted, and ACK has been received. */
+			{
+				i2c_status = I2C_Transmit( (uint8_t)(mem_address >> _BYTE_SHIFT_VAL) , time_out); /* Send first memory Address */
+				step_check++; /* The step is completed */
+			}
+			else{}
+			
+			/* ~~~~~~~~~~~~ Send LSB Memory Address ~~~~~~~~~~~~ */
+			
+			if ( i2c_status == _MT_DATA_TRANSMITTED_ACK ) /* Data has been transmitted, and ACK has been received. */
+			{
+				i2c_status = I2C_Transmit( (uint8_t)mem_address , time_out ); /* Send second memory Address */
+				step_check++; /* The step is completed */
+			}
+			else{}
+			
+		}
+		
+		/* --------------------------------- */
+		
+		if ( i2c_status == _MT_DATA_TRANSMITTED_ACK ) /* DATA has been transmitted, and ACK has been received. */
+		{
+			i2c_status = I2C_BeginTransmission(time_out); /* Repeat Start */
+			step_check++; /* The step is completed */
+		}
+		else{}
+		
+		/* --------------------------------- */
+		
+		if ( i2c_status == _MT_REP_START_TRANSMITTED ) /* A repeated START condition has been transmitted */
+		{
+			i2c_status = I2C_Transmit( (dev_address | _DEVICE_READ) , time_out ); /* Send device Address */
+			step_check++; /* The step is completed */
+		}
+		else{}
+		
+		/* --------------------------------- */
+		
+		for ( ; quantity > 1 ; quantity-- ) /* Loop for write data to register */
+		{
+			
+			if ( ( i2c_status == _MR_SLA_R_TRANSMITTED_ACK ) || ( i2c_status == _MR_DATA_RECEIVED_ACK ) ) /* SLA+R/DATA has been transmitted, and ACK has been received. */
+			{
+				
+				*mem_data = I2C_ReceiveACK(time_out); /* Receive Data with send ACK */
+				i2c_status = I2C_Status(); /* I2C status take */
+				step_check++; /* The step is completed */
+				mem_data++; /* Select next byte */
+				
+			}
+			else{}
+			
+		}
+		
+		/* --------------------------------- */
+		
+		if ( ( i2c_status == _MR_SLA_R_TRANSMITTED_ACK ) || ( i2c_status == _MR_DATA_RECEIVED_ACK ) ) /* SLA+R/DATA has been transmitted, and ACK has been received. */
+		{
+			
+			*mem_data = I2C_ReceiveNACK(time_out); /* Receive Data with send NACK */
+			i2c_status = I2C_Status(); /* I2C status take */
+			step_check++; /* The step is completed */
+			
+		}
+		else{}
+		
+		/* --------------------------------- */
+		
+		if ( i2c_status == _MR_DATA_RECEIVED_NACK ) /* Data byte has been received; NOT ACK has been returned */
+		{
+			I2C_EndTransmission(time_out); /* End Transmission */
+			step_check++; /* The step is completed */
+		}
+		else{}
+		
+		/* --------------------------------- */
+		
+		if ( (mem_add_size == _I2C_MEMADD_SIZE_8BIT) && (step_check == ((_MEMORY_BURST_READ_STEPS - 1) + read_quantity)) ) /* The steps are complete */
+		{
+			i2c_status = _STAT_OK; /* Set status */
+		}
+		else if ( (mem_add_size == _I2C_MEMADD_SIZE_16BIT) && (step_check == (_MEMORY_BURST_READ_STEPS + read_quantity)) ) /* The steps are complete */
+		{
+			i2c_status = _STAT_OK; /* Set status */
+		}
+		else
+		{
+			i2c_status = _STAT_ERROR; /* Set status */
+		}
+		
+	}
+	else
+	{
+		i2c_status = _STAT_ERROR; /* Set status */
+	}
+	
+	return i2c_status;
+	
+	/* Function End */
+}
 /*
 	Parameters    :
 					dev_address : Target device address: The device 7 bits 

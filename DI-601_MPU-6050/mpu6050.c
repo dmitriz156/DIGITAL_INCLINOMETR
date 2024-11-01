@@ -161,10 +161,20 @@ uint8_t MPU6050_BurstRead(uint8_t address , uint8_t *udata, uint8_t size, uint16
 	
 	g_mpu_com_resp = _MPU_ERROR; /* Variable for check status */
 	
+	/* ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ */	
+	g_mpu_com_resp = I2C_Mem_Read(_MPU6050_ADD, address, _MPU6050_MEMADD_SIZE, udata, size, _time_out); /* Write data */
+	return g_mpu_com_resp;
+
+}
+
+uint8_t MPU6050_BurstRead_My(uint8_t address , uint8_t *udata, uint8_t size, uint16_t _time_out) /* Function for read Burst Byte Data from MPU6050 register */
+{
 	/* ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ */
-	LED = 1;	
-	g_mpu_com_resp = _I2C_MEM_READ(_MPU6050_ADD, address, _MPU6050_MEMADD_SIZE, udata, size, _time_out); /* Write data */
-	LED = 0;
+	
+	g_mpu_com_resp = _MPU_ERROR; /* Variable for check status */
+	
+	/* ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ */
+	g_mpu_com_resp = I2C_Mem_Read_My(_MPU6050_ADD, address, _MPU6050_MEMADD_SIZE, udata, size, _time_out); /* Write data */
 	return g_mpu_com_resp;
 
 }
