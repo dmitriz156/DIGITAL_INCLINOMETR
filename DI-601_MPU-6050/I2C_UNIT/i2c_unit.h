@@ -33,6 +33,7 @@
 #include <stdint.h> /* Import standard integer type */
 
 #include "i2c_unit_conf.h" /* Import i2c config file */
+#include "../main.h"
 
 /*----------------------------------------------------------*/
 

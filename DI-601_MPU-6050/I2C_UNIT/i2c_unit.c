@@ -48,22 +48,29 @@ uint8_t I2C_Status(void) /* Function for take I2C status */
 			
 */
 
+// uint8_t I2C_BeginTransmission(uint16_t time_out) /* Function for send START condition */
+// {
+// 	/* --------------------------- */
+// 	
+// 	_I2C_CR = (1 << TWINT)|(1 << TWSTA)|(1 << TWEN); /* Send START condition */
+// 	
+// 	/* --------------------------- */
+// 	while ( (!(_I2C_CR & (1 << TWINT))) && (time_out > 0) ) /* Wait for TWINT Flag set. This indicates that the START condition has been transmitted. */
+// 	{
+// 		_delay_ms(1);
+// 		time_out--;
+// 	}
+// 	/* --------------------------- */
+// 	return I2C_Status(); /* Return status */
+// 	
+// }
 uint8_t I2C_BeginTransmission(uint16_t time_out) /* Function for send START condition */
 {
-	/* --------------------------- */
-	
 	_I2C_CR = (1 << TWINT)|(1 << TWSTA)|(1 << TWEN); /* Send START condition */
-	
-	/* --------------------------- */
-	while ( (!(_I2C_CR & (1 << TWINT))) && (time_out > 0) ) /* Wait for TWINT Flag set. This indicates that the START condition has been transmitted. */
-	{
-		_delay_ms(1);
-		time_out--;
-	}
-	
-	/* --------------------------- */
+	uint16_t i = 10000;
+	while ( (!(_I2C_CR & (1 << TWINT))) && (i > 0)) /* Wait for TWINT Flag set. This indicates that the START condition has been transmitted. */
+	{i--;}
 	return I2C_Status(); /* Return status */
-	
 }
 /*
 	Parameters    :
@@ -79,24 +86,29 @@ uint8_t I2C_BeginTransmission(uint16_t time_out) /* Function for send START cond
 			
 */
 
+//uint8_t I2C_Transmit(uint8_t data , uint16_t time_out) /* Function for transmit data */
+//{
+// 	_I2C_DR = data; /* Data to be transmitted */
+// 	
+// 	_I2C_CR = (1 << TWINT) | (1 << TWEN); /* Start transmission */
+// 	
+// 	while ( (!(_I2C_CR & (1 << TWINT))) && (time_out > 0)) /* Wait for TWINT Flag set. This indicates that the START condition has been transmitted. */
+// 	{
+// 		_delay_ms(1);
+// 		time_out--;
+// 	}
+// 	return I2C_Status();
+//}
+
 uint8_t I2C_Transmit(uint8_t data , uint16_t time_out) /* Function for transmit data */
 {
-	/* --------------------------- */
 	_I2C_DR = data; /* Data to be transmitted */
 	
-	/* --------------------------- */
 	_I2C_CR = (1 << TWINT) | (1 << TWEN); /* Start transmission */
-	
-	/* --------------------------- */
-	while ( (!(_I2C_CR & (1 << TWINT))) && (time_out > 0)) /* Wait for TWINT Flag set. This indicates that the START condition has been transmitted. */
-	{
-		_delay_ms(1);
-		time_out--;
-	}
-	
-	/* --------------------------- */
+	uint16_t i = 10000;
+	while ( (!(_I2C_CR & (1 << TWINT))) && (i > 0)) /* Wait for TWINT Flag set. This indicates that the START condition has been transmitted. */
+	{i--;}
 	return I2C_Status();
-	
 }
 /*
 	Parameters    :
@@ -113,21 +125,29 @@ uint8_t I2C_Transmit(uint8_t data , uint16_t time_out) /* Function for transmit 
 			
 */
 
+// uint8_t I2C_ReceiveACK(uint16_t time_out) /* Function for receive data with ACK */
+// {
+// 	/* --------------------------- */
+// 	_I2C_CR = (1 << TWINT) | (1 << TWEA) | (1 << TWEN); /* Acknowledge Send */
+// 	
+// 	/* --------------------------- */
+// 	while ( (!(_I2C_CR & (1 << TWINT))) && (time_out > 0)) /* Wait for TWINT Flag set. This indicates that the START condition has been transmitted. */
+// 	{
+// 		_delay_ms(1);
+// 		time_out--;
+// 	}
+// 	/* --------------------------- */
+// 	return _I2C_DR; /* Return received data */
+// 
+// }
 uint8_t I2C_ReceiveACK(uint16_t time_out) /* Function for receive data with ACK */
 {
-	/* --------------------------- */
+	for (uint16_t i = 0; i < 1000; i ++){}
 	_I2C_CR = (1 << TWINT) | (1 << TWEA) | (1 << TWEN); /* Acknowledge Send */
-	
-	/* --------------------------- */
-	while ( (!(_I2C_CR & (1 << TWINT))) && (time_out > 0)) /* Wait for TWINT Flag set. This indicates that the START condition has been transmitted. */
-	{
-		_delay_ms(1);
-		time_out--;
-	}
-	
-	/* --------------------------- */
+	uint16_t i = 10000;
+	while ( (!(_I2C_CR & (1 << TWINT))) && (i > 0)) /* Wait for TWINT Flag set. This indicates that the START condition has been transmitted. */
+	{i--;}
 	return _I2C_DR; /* Return received data */
-
 }
 /*
 	Parameters    :
@@ -143,21 +163,27 @@ uint8_t I2C_ReceiveACK(uint16_t time_out) /* Function for receive data with ACK 
 			
 */
 
+// uint8_t I2C_ReceiveNACK(uint16_t time_out) /* Function for receive data with no ACK */
+// {
+// 	/* --------------------------- */
+// 	_I2C_CR = (1 << TWINT) | (1 << TWEN);
+// 
+// 	/* --------------------------- */
+// 	while ( (!(_I2C_CR & (1 << TWINT))) && (time_out > 0)) /* Wait for TWINT Flag set. This indicates that the START condition has been transmitted. */
+// 	{
+// 		_delay_ms(1);
+// 		time_out--;
+// 	}
+// 	/* --------------------------- */
+// 	return _I2C_DR; /* Return received data */
+// }
 uint8_t I2C_ReceiveNACK(uint16_t time_out) /* Function for receive data with no ACK */
 {
-	/* --------------------------- */
 	_I2C_CR = (1 << TWINT) | (1 << TWEN);
-
-	/* --------------------------- */
-	while ( (!(_I2C_CR & (1 << TWINT))) && (time_out > 0)) /* Wait for TWINT Flag set. This indicates that the START condition has been transmitted. */
-	{
-		_delay_ms(1);
-		time_out--;
-	}
-	
-	/* --------------------------- */
+	uint16_t i = 10000;
+	while ( (!(_I2C_CR & (1 << TWINT))) && (i > 0)) /* Wait for TWINT Flag set. This indicates that the START condition has been transmitted. */
+	{i--;}
 	return _I2C_DR; /* Return received data */
-	
 }
 /*
 	Parameters    :
@@ -173,18 +199,24 @@ uint8_t I2C_ReceiveNACK(uint16_t time_out) /* Function for receive data with no 
 			
 */
 
+// void I2C_EndTransmission(uint16_t time_out) /* Function for stop transmission I2C */
+// {
+// 	/* --------------------------- */
+// 	_I2C_CR = ((1 << TWINT)|(1 << TWEN)|(1 << TWSTO)); /* Transmit STOP condition */
+// 
+// 	/* --------------------------- */
+// 	while ( (_I2C_CR & (1 << TWSTO)) && (time_out > 0)) /* Wait for TWSTO Flag reset. */
+// 	{
+// 		_delay_ms(1);
+// 		time_out--;
+// 	}
+// }
 void I2C_EndTransmission(uint16_t time_out) /* Function for stop transmission I2C */
 {
-	/* --------------------------- */
 	_I2C_CR = ((1 << TWINT)|(1 << TWEN)|(1 << TWSTO)); /* Transmit STOP condition */
-
-	/* --------------------------- */
-	while ( (_I2C_CR & (1 << TWSTO)) && (time_out > 0)) /* Wait for TWSTO Flag reset. */
-	{
-		_delay_ms(1);
-		time_out--;
-	}
-	
+	uint16_t i = 10000;
+	while ( (_I2C_CR & (1 << TWSTO)) && (i > 0)) /* Wait for TWSTO Flag reset. */
+	{i--;}
 }
 /*
 	Parameters    :
@@ -863,7 +895,7 @@ StatusTypeDef I2C_Mem_Read_My(uint8_t dev_address , uint32_t mem_address , uint8
 	if ( I2C_IsDeviceReady(dev_address , 1 , time_out) == _TRUE ) /* target device is ready */
 	{
 		
-		i2c_status = I2C_BeginTransmission(time_out); /* Begin Transmission */
+		i2c_status = I2C_BeginTransmission_My(time_out); /* Begin Transmission */
 		
 		/* --------------------------------- */
 		
@@ -872,7 +904,7 @@ StatusTypeDef I2C_Mem_Read_My(uint8_t dev_address , uint32_t mem_address , uint8
 			
 			if ( i2c_status == _MT_START_TRANSMITTED ) /* START condition has been transmitted */
 			{
-				i2c_status = I2C_Transmit( (dev_address | (uint8_t)((mem_address >> _P0_SHIFT_VAL_MEMADD_SIZE_8BIT) & _P0_BIT_SEL_MEMADD_SIZE_8BIT)) , time_out ); /* Send device Address */
+				i2c_status = I2C_Transmit_My( (dev_address | (uint8_t)((mem_address >> _P0_SHIFT_VAL_MEMADD_SIZE_8BIT) & _P0_BIT_SEL_MEMADD_SIZE_8BIT)) , time_out ); /* Send device Address */
 				step_check++; /* The step is completed */
 			}
 			else{}
@@ -881,7 +913,7 @@ StatusTypeDef I2C_Mem_Read_My(uint8_t dev_address , uint32_t mem_address , uint8
 			
 			if ( i2c_status == _MT_SLA_W_TRANSMITTED_ACK ) /* Data has been transmitted, and ACK has been received. */
 			{
-				i2c_status = I2C_Transmit( (uint8_t)mem_address , time_out ); /* Send second memory Address */
+				i2c_status = I2C_Transmit_My( (uint8_t)mem_address , time_out ); /* Send second memory Address */
 				step_check++; /* The step is completed */
 			}
 			else{}
@@ -892,7 +924,7 @@ StatusTypeDef I2C_Mem_Read_My(uint8_t dev_address , uint32_t mem_address , uint8
 			
 			if ( i2c_status == _MT_START_TRANSMITTED ) /* START condition has been transmitted */
 			{
-				i2c_status = I2C_Transmit( (dev_address | (uint8_t)((mem_address >> _P0_SHIFT_VAL_MEMADD_SIZE_16BIT) & _P0_BIT_SEL_MEMADD_SIZE_16BIT)) , time_out ); /* Send device Address */
+				i2c_status = I2C_Transmit_My( (dev_address | (uint8_t)((mem_address >> _P0_SHIFT_VAL_MEMADD_SIZE_16BIT) & _P0_BIT_SEL_MEMADD_SIZE_16BIT)) , time_out ); /* Send device Address */
 				step_check++; /* The step is completed */
 			}
 			else{}
@@ -901,7 +933,7 @@ StatusTypeDef I2C_Mem_Read_My(uint8_t dev_address , uint32_t mem_address , uint8
 			
 			if ( i2c_status == _MT_SLA_W_TRANSMITTED_ACK ) /* SLA+W has been transmitted, and ACK has been received. */
 			{
-				i2c_status = I2C_Transmit( (uint8_t)(mem_address >> _BYTE_SHIFT_VAL) , time_out); /* Send first memory Address */
+				i2c_status = I2C_Transmit_My( (uint8_t)(mem_address >> _BYTE_SHIFT_VAL) , time_out); /* Send first memory Address */
 				step_check++; /* The step is completed */
 			}
 			else{}
@@ -910,7 +942,7 @@ StatusTypeDef I2C_Mem_Read_My(uint8_t dev_address , uint32_t mem_address , uint8
 			
 			if ( i2c_status == _MT_DATA_TRANSMITTED_ACK ) /* Data has been transmitted, and ACK has been received. */
 			{
-				i2c_status = I2C_Transmit( (uint8_t)mem_address , time_out ); /* Send second memory Address */
+				i2c_status = I2C_Transmit_My( (uint8_t)mem_address , time_out ); /* Send second memory Address */
 				step_check++; /* The step is completed */
 			}
 			else{}
@@ -921,7 +953,7 @@ StatusTypeDef I2C_Mem_Read_My(uint8_t dev_address , uint32_t mem_address , uint8
 		
 		if ( i2c_status == _MT_DATA_TRANSMITTED_ACK ) /* DATA has been transmitted, and ACK has been received. */
 		{
-			i2c_status = I2C_BeginTransmission(time_out); /* Repeat Start */
+			i2c_status = I2C_BeginTransmission_My(time_out); /* Repeat Start */
 			step_check++; /* The step is completed */
 		}
 		else{}
@@ -930,7 +962,7 @@ StatusTypeDef I2C_Mem_Read_My(uint8_t dev_address , uint32_t mem_address , uint8
 		
 		if ( i2c_status == _MT_REP_START_TRANSMITTED ) /* A repeated START condition has been transmitted */
 		{
-			i2c_status = I2C_Transmit( (dev_address | _DEVICE_READ) , time_out ); /* Send device Address */
+			i2c_status = I2C_Transmit_My( (dev_address | _DEVICE_READ) , time_out ); /* Send device Address */
 			step_check++; /* The step is completed */
 		}
 		else{}
@@ -943,7 +975,7 @@ StatusTypeDef I2C_Mem_Read_My(uint8_t dev_address , uint32_t mem_address , uint8
 			if ( ( i2c_status == _MR_SLA_R_TRANSMITTED_ACK ) || ( i2c_status == _MR_DATA_RECEIVED_ACK ) ) /* SLA+R/DATA has been transmitted, and ACK has been received. */
 			{
 				
-				*mem_data = I2C_ReceiveACK(time_out); /* Receive Data with send ACK */
+				*mem_data = I2C_ReceiveACK_My(time_out); /* Receive Data with send ACK */
 				i2c_status = I2C_Status(); /* I2C status take */
 				step_check++; /* The step is completed */
 				mem_data++; /* Select next byte */
@@ -958,7 +990,7 @@ StatusTypeDef I2C_Mem_Read_My(uint8_t dev_address , uint32_t mem_address , uint8
 		if ( ( i2c_status == _MR_SLA_R_TRANSMITTED_ACK ) || ( i2c_status == _MR_DATA_RECEIVED_ACK ) ) /* SLA+R/DATA has been transmitted, and ACK has been received. */
 		{
 			
-			*mem_data = I2C_ReceiveNACK(time_out); /* Receive Data with send NACK */
+			*mem_data = I2C_ReceiveNACK_My(time_out); /* Receive Data with send NACK */
 			i2c_status = I2C_Status(); /* I2C status take */
 			step_check++; /* The step is completed */
 			
@@ -969,7 +1001,7 @@ StatusTypeDef I2C_Mem_Read_My(uint8_t dev_address , uint32_t mem_address , uint8
 		
 		if ( i2c_status == _MR_DATA_RECEIVED_NACK ) /* Data byte has been received; NOT ACK has been returned */
 		{
-			I2C_EndTransmission(time_out); /* End Transmission */
+			I2C_EndTransmission_My(time_out); /* End Transmission */
 			step_check++; /* The step is completed */
 		}
 		else{}

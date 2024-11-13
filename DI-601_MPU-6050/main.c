@@ -14,7 +14,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#define DEBUG_MOD
+//#define DEBUG_MOD
 
 #define UART_BUFFER_SIZE		128
 /*===============Constants that determine the types of protractors=================*/
@@ -43,11 +43,8 @@
 #define GYRO_SCALE	(2000/16384)*(M_PI/180)
 
 #define FILTER_WINDOW_SIZE 5 // Розмір вікна фільтра
+float buffer[FILTER_WINDOW_SIZE] = {0};
 
-int16_t filter_window_X[FILTER_WINDOW_SIZE] = {0}; // Вікно фільтра для X_accel
-float filter_window_Y[FILTER_WINDOW_SIZE] = {0}; // Вікно фільтра для Y_accel
-int16_t filter_window_Z[FILTER_WINDOW_SIZE] = {0}; // Вікно фільтра для Z_accel
-int filter_index = 0; // Індекс вікна фільтра
 //===================================================================================================
 uint8_t start_token = 0xAB;
 uint16_t count = 0;
@@ -68,6 +65,7 @@ axis_data_t		All_Axis     = {0};
 volatile float X_angle = 0;
 volatile float Y_angle = 0;
 volatile float Z_angle = 0;
+float Ploter_angle = 0;
 
 uint8_t UART_NeedToSend = 0;
 uint8_t sensitivity = 0;
@@ -75,10 +73,10 @@ int16_t MAX_Accel_Value_X = 0;
 int16_t MAX_Accel_Value_Y = 0;
 int16_t MAX_Accel_Value_Z = 0;
 
-volatile float filtered_X;
-volatile float filtered_Y;
-volatile float filtered_Z;
-volatile float OUT_angle;
+int16_t filt_X;
+float filt_Y;
+int16_t filt_Z;
+float y_accel_OLD;
 
 int16_t temp;
 /* ---------------------------------------- */
@@ -114,10 +112,16 @@ uint8_t rx_counter, rx_counter;
 bool rx_buffer_overflow;
 
 /*------kalman_filter coeficient------*/
-#define KOEF			0.98
-#define KALMAN_ACEL_Q	0.01//0.01
-#define KALMAN_GYRO_Q	0.05//0.03
-#define KALMAN_R		0.1//0.015
+#define KOEF			0.98f // for simple Kalman filter
+
+#define KALMAN_ACEL_Q	0.025f//0.01
+#define KALMAN_GYRO_Q	0.02f//0.03
+#define KALMAN_R		0.018f//0.015
+
+/*------kalman_filter coeficient------*/
+float angle;
+float bias;
+float P[2][2] = {{0, 0}, {0, 0}};
 
 // Функція для розбиття значення типу float на масив байтів uint8_t
 void float_to_byte(float value, uint8_t *array, int start_index) {
@@ -144,7 +148,7 @@ float byte_to_float(uint8_t *array, int start_index) {
 int main(void)
 {
 	sei();
-	//wdt_enable(WDTO_1S);
+	wdt_enable(WDTO_1S);
 	_LCD_PORT_DIR = _ALL_OUTPUT;
 	_I2C_PORT_DIR = ( 1 << _SDA ) | _SCL;
 	
@@ -159,34 +163,10 @@ int main(void)
 	/* ---------------------------------------- */
     while (1) 
     {
-
-		LED = 1;
 		MPU6050_GetRawAccel(&All_Axis_ROW.Xaccel_raw, 20);
 		MPU6050_GetRawGyro(&All_Axis_ROW.Xgyro_raw, 20);
 		
-		//===
-		
-// 		uint8_t raw_accel[_MPU_AXIS_ALL_REG_LEGTH];
-// 		I2C_Mem_Read_My(_MPU6050_ADD, _REG_ACCEL_XOUT_H, _I2C_MEMADD_SIZE_8BIT, raw_accel, _MPU_AXIS_ALL_REG_LEGTH, 20);
-// 		//memcpy(All_Axis_ROW.Xaccel_raw, raw_accel, _MPU_AXIS_ALL_REG_LEGTH);
-// 		
-// 		uint8_t raw_gyro[_MPU_AXIS_ALL_REG_LEGTH];
-// 		I2C_Mem_Read_My(_MPU6050_ADD, _REG_GYRO_XOUT_H, _I2C_MEMADD_SIZE_8BIT, raw_gyro, _MPU_AXIS_ALL_REG_LEGTH, 20);
-// 		//memcpy(All_Axis_ROW.Xgyro_raw, raw_gyro, _MPU_AXIS_ALL_REG_LEGTH);
-// 		
-// 		int16_t *raw_accel_str = &All_Axis_ROW.Xaccel_raw;
-// 		int16_t *raw_gyro_str = &All_Axis_ROW.Xgyro_raw;
-// 		for (uint8_t i = 0; i < _MPU_AXIS_ALL_REG_LEGTH ; i += _MPU_AXIS_REG_LENGTH ) /* Loop for save data to string */
-// 		{
-// 			*raw_accel_str = ( (int16_t)raw_accel[i] << _MPU_HIGH_BYTE_SHIFT ) | (int16_t)raw_accel[i + 1]; /* Write data */
-// 			raw_accel_str++;
-// 			*raw_gyro_str = ( (int16_t)raw_gyro[i] << _MPU_HIGH_BYTE_SHIFT ) | (int16_t)raw_gyro[i + 1]; /* Write data */
-// 			raw_accel_str++;
-// 		}
-		//===
-		
-		LED = 0;
-		//wdt_reset();
+		wdt_reset();
 		
 		All_Axis.x_accel = ( _MPU_RAD_TO_DEG * ( atan2( -All_Axis_ROW.Yaccel_raw , -All_Axis_ROW.Zaccel_raw ) + _MATH_PI ) );
 		All_Axis.y_accel = ( _MPU_RAD_TO_DEG * ( atan2( -All_Axis_ROW.Xaccel_raw , -All_Axis_ROW.Zaccel_raw ) + _MATH_PI ) );
@@ -197,48 +177,48 @@ int main(void)
 
 // 		//===============Complementary filter begin================
 // 		filtered_Y = (int16_t)((0.98 * y_accel) - (0.02 * y_gyro));
-//		Y_angle = KOEF * (y_accel * 0.11) + (1 - KOEF) * y_gyro;
+//		Y_angle = KOEF * (y_accel * 0.0053) + (1 - KOEF) * y_gyro;
 // 		//================Complementary filter end================
 
 // 		//==================Simple KALMAN filter==================
-// 		filtered_Y = KOEF * y_accel + (1 - KOEF) * y_accel_OLD;
-// 		y_accel_OLD = y_accel;
+// 		filt_Y = KOEF * All_Axis.y_accel + (1 - KOEF) * y_accel_OLD;
+// 		y_accel_OLD = filt_Y;
 // 		//========================================================
-		//X_angle = kalman_filter(x_accel, x_gyro, 110);
-		Y_angle = kalman_filter(All_Axis.y_accel, All_Axis.y_gyro, 27.0);
-		//Z_angle = kalman_filter(z_accel, z_gyro, 110); //t prev = 120
+
+		if (All_Axis.y_accel < 1.0f || All_Axis.y_accel > 359.0f)
+		{
+		}
+		Y_angle = kalman_filter(All_Axis.y_accel, All_Axis.y_gyro, 0.0053f); //5.3 ms
+		Ploter_angle = Y_angle;
+		
 	//====================================Output depending on the type BEGIN======================================
 		if (Angle_Type == RB_DATA_TYPE){
-			Y_angle -= 90.0;
+			Y_angle -= 90.0f;
 		}
-		if (Y_angle <= 180.0){
+		if (Y_angle <= 180.0f){
 			Y_angle = Y_angle;
 		}else{
-			Y_angle = Y_angle - 360.0;
+			Y_angle = Y_angle - 360.0f;
 		}
-		bool temp_flag;
+		//===============================
+		//Y_angle = moving_average(Y_angle);
+		//===============================
+		
+		bool temp_flag = 0;
 		#ifdef DEBUG_MOD
 		temp_flag = 1;
 		#endif
-		if (Angle_Type == BOLLARD_DATA_TYPE || temp_flag)
+		
+		if (Angle_Type == BOLLARD_DATA_TYPE || temp_flag == 0)
 		{
-			if (abs(All_Axis_ROW.Yaccel_raw) > 12000)
-			{
-				if(abs(MAX_Accel_Value_X) < abs(All_Axis_ROW.Xaccel_raw)){
-					MAX_Accel_Value_X = All_Axis_ROW.Xaccel_raw;
-				}
-				if(abs(MAX_Accel_Value_Y) < abs(All_Axis_ROW.Yaccel_raw)){
-					MAX_Accel_Value_Y = All_Axis_ROW.Yaccel_raw;
-				}
-				if(abs(MAX_Accel_Value_Z) < abs(All_Axis_ROW.Zaccel_raw)){
-					MAX_Accel_Value_Z = All_Axis_ROW.Zaccel_raw;
-				}
+			if(abs(MAX_Accel_Value_X) < abs(All_Axis_ROW.Xaccel_raw)){
+				MAX_Accel_Value_X = All_Axis_ROW.Xaccel_raw;
 			}
-			else
-			{
-				MAX_Accel_Value_X = 10;
-				MAX_Accel_Value_Y = 10;
-				MAX_Accel_Value_Z = 10;
+			if(abs(MAX_Accel_Value_Y) < abs(All_Axis_ROW.Yaccel_raw)){
+				MAX_Accel_Value_Y = All_Axis_ROW.Yaccel_raw;
+			}
+			if(abs(MAX_Accel_Value_Z) < abs(All_Axis_ROW.Zaccel_raw)){
+				MAX_Accel_Value_Z = All_Axis_ROW.Zaccel_raw;
 			}
 		}
 	//=====================================Output depending on the type END=======================================
@@ -251,9 +231,9 @@ int main(void)
 //----------------------------------------------------------------------------------
 
 float kalman_filter(float measured_angle, float gyro_rate, float dt) {
-	static float angle = 0;
-	static float bias = 0;
-	static float P[2][2] = {{0, 0}, {0, 0}};
+// 	static float angle;
+// 	static float bias;
+// 	static float P[2][2];// = {{0, 0}, {0, 0}};
 
 	// Перший крок: оцінка нового стану на основі прогнозу
 	angle += dt * (gyro_rate - bias);
@@ -292,20 +272,22 @@ void arduino_ploter(void)
 	TX_ON;
 	
 	//====!!!!!!!!!!!====cod to display in arduino ide monitor=====!!!!!!!!!=======
-	//UART_Transmit_String("Xa:,Ya:,Za:,Xgy:,Ygy:,Zgy:\r\n");
 	//%.2f
-	//UART_PrintLn("%d,%d,%d,%d,%d,%d", All_Axis_ROW.Xaccel_raw, All_Axis_ROW.Yaccel_raw, All_Axis_ROW.Zaccel_raw, All_Axis_ROW.Xgyro_raw, All_Axis_ROW.Ygyro_raw, All_Axis_ROW.Zgyro_raw);
-	UART_Transmit_String("MAX_A_X:,MAX_A_Y:,MAX_A_Z:\r\n");
-	UART_PrintLn("%d,%d,%d", MAX_Accel_Value_X, MAX_Accel_Value_Y, MAX_Accel_Value_Z);
-	MAX_Accel_Value_X = 0;
-	MAX_Accel_Value_Y = 0;
-	MAX_Accel_Value_Z = 0;
+// 	UART_Transmit_String("MAX_A_X:,MAX_A_Y:,MAX_A_Z:\r\n");
+// 	UART_PrintLn("%d,%d,%d", MAX_Accel_Value_X, MAX_Accel_Value_Y, MAX_Accel_Value_Z);
+// 	MAX_Accel_Value_X = 0;
+// 	MAX_Accel_Value_Y = 0;
+// 	MAX_Accel_Value_Z = 0;
+	
+	UART_Transmit_String("angle_y:, filter_y \r\n");
+	UART_PrintLn("%d,%d", (int16_t)All_Axis.y_accel, (int16_t)Ploter_angle);
 }
 
 void UART_data_procesing(void)
 {
 	if ( (rx_buffer[0] == Sensor_Addres) && (crc(rx_buffer, DATA_PACKAGE_SIZE-1) == rx_buffer[6]))
 	{
+		LED = !LED;
 		Angle_Type = rx_buffer[2];
 		
 		if (rx_buffer[3] == ADDRESS_CHANGE_KEY)
@@ -327,10 +309,11 @@ void UART_data_procesing(void)
 		if (Angle_Type == RB_DATA_TYPE || Angle_Type == MODULAR_RB_DATA_TYPE)
 		{
 			float_to_byte(Y_angle, tx_buffer, 1);
+			//float_to_byte(filt_Y, tx_buffer, 1);
 		}
 		if (Angle_Type == BOLLARD_DATA_TYPE)
 		{
-			if (MAX_Accel_Value_X > MAX_Accel_Value_Z)
+			if (abs(MAX_Accel_Value_X) > abs(MAX_Accel_Value_Z))
 			{
 				tx_buffer[1] = (MAX_Accel_Value_X >> 8) & 0xFF;//MSB
 				tx_buffer[2] = MAX_Accel_Value_X & 0xFF;//LSB
@@ -346,7 +329,8 @@ void UART_data_procesing(void)
 			
 			MAX_Accel_Value_X = 11;
 			MAX_Accel_Value_Y = 11;
-			MAX_Accel_Value_Z = 11;
+			MAX_Accel_Value_Z = 11;	
+			
 		}
 		tx_buffer[5] = Sensor_Addres;
 		tx_buffer[6] = crc(tx_buffer, DATA_PACKAGE_SIZE-1);           //обрахувати контрольну суму і вислати останнім байтом
@@ -509,23 +493,15 @@ int16_t MPU6050_Calibrate(int16_t *Xg, int16_t *Yg, int16_t *Zg){
 }
 /*================================================================================*/
 //==================================================================================
-int16_t median_filter(int16_t value, int16_t *filter_window) {
-	filter_window[filter_index] = value; // Додаємо нове значення до вікна фільтра
-	filter_index = (filter_index + 1) % FILTER_WINDOW_SIZE; // Перевизначаємо індекс для кругового буфера
-	
-	// Сортуємо значення в вікні фільтра
-	for (int i = 0; i < FILTER_WINDOW_SIZE - 1; i++) {
-		for (int j = 0; j < FILTER_WINDOW_SIZE - i - 1; j++) {
-			if (filter_window[j] > filter_window[j + 1]) {
-				// Обмін значень
-				int16_t temp = filter_window[j];
-				filter_window[j] = filter_window[j + 1];
-				filter_window[j + 1] = temp;
-			}
-		}
-	}
-	
-	// Повертаємо медіанне значення з вікна фільтра
-	return filter_window[FILTER_WINDOW_SIZE / 2];
+float moving_average(float new_value) {
+	static int index;
+	static float sum;
+
+	sum -= buffer[index];
+	buffer[index] = new_value;
+	sum += new_value;
+	index = (index + 1) % FILTER_WINDOW_SIZE;
+
+	return sum / FILTER_WINDOW_SIZE;
 }
 //==================================================================================

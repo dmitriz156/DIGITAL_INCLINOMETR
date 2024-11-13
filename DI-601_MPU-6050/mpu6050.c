@@ -425,68 +425,68 @@ uint8_t MPU6050_DefInit(uint16_t _time_out) /* Function for initialize MPU6050 *
 
 uint8_t MPU6050_DMPInit() /* Function for initialize MPU6050 DMP */
 {
-	// 	/* ..... Reset MPU ..... */
-	// 	MPU6050_Reset();
-	// 	_DELAY_MS(_MPU_WAKEUP_TIME_MS); // wait after reset
-	//
-	// 	MPU6050_DisableSleepMode();
-	//
-	// 	/* get MPU hardware revision */
-	// 	MPU6050_SetMemoryBank(0x10, true, true);
-	// 	MPU6050_SetMemoryStartAddress(0x06);
-	// 	MPU6050_SetMemoryBank(0, false, false);
-	//
-	// 	/* setup weird slave stuff (?) */
-	// 	MPU6050_SetSlaveAddress(0, 0x7F);
-	// 	MPU6050_SetI2CMasterModeEnabled(false);
-	// 	MPU6050_SetSlaveAddress(0, 0x68);
-	// 	MPU6050_ResetI2CMaster();
-	// 	_DELAY_MS(_MPU_WAKEUP_TIME_MS);
-	// 	MPU6050_SetClockSource(_CLKSEL_Z_AXIS_GYROSCOPE_REFERENCE);
-	//
-	// 	MPU6050_SetIntEnabled(1 << MPU6050_INTERRUPT_FIFO_OFLOW_BIT | 1 << MPU6050_INTERRUPT_DMP_INT_BIT);
-	//
-	// 	MPU6050_SetRate(4); /* 1khz / (1 + 4) = 200 Hz */
-	//
-	// 	MPU6050_SetExternalFrameSync(_ES_TEMP_OUT_L);
-	//
-	// 	MPU6050_SetDLPFMode(_DLPF_CFG_44A_42G_HZ);
-	//
-	// 	MPU6050_SetFullScaleGyroRange(_GYRO_FULL_SCALE_RANGE_2000);
-	//
-	// 	if ( !MPU6050_WriteProgMemoryBlock(dmpMemory, MPU6050_DMP_CODE_SIZE) )
-	// 	{
-	// 		return 1;
-	// 	}
-	//
-	// 	/* Set the FIFO Rate Divisor int the DMP Firmware Memory */
-	// 	uint8_t dmpUpdate[] = {0x00, MPU6050_DMP_FIFO_RATE_DIVISOR};
-	// 	MPU6050_WriteMemoryBlock(dmpUpdate, 0x02, 0x02, 0x16); /* Lets write the dmpUpdate data to the Firmware image, we have 2 bytes to write in bank 0x02 with the Offset 0x16 */
-	//
-	// 	/* write start address MSB into register */
-	// 	MPU6050_SetDMPConfig1(0x03);
-	// 	/* write start address LSB into register */
-	// 	MPU6050_SetDMPConfig2(0x00);
-	//
-	// 	MPU6050_SetOTPBankValid(false);
-	//
-	// 	MPU6050_SetMotionDetectionThreshold(2);
-	//
-	// 	MPU6050_SetZeroMotionDetectionThreshold(156);
-	//
-	// 	MPU6050_SetMotionDetectionDuration(80);
-	//
-	// 	MPU6050_SetZeroMotionDetectionDuration(0);
-	// 	MPU6050_SetFIFOEnabled(true);
-	//
-	// 	MPU6050_ResetDMP();
-	//
-	// 	MPU6050_SetDMPEnabled(false);
-	//
-	// 	dmpPacketSize = 42;
-	//
-	// 	MPU6050_ResetFIFO();
-	// 	MPU6050_GetIntStatus();
+	/* ..... Reset MPU ..... */
+// 	MPU6050_Reset();
+// 	_delay_ms(_MPU_WAKEUP_TIME_MS); // wait after reset
+// 	
+// 	MPU6050_DisableSleepMode();
+// 	
+// 	/* get MPU hardware revision */
+// 	MPU6050_SetMemoryBank(0x10, true, true);
+// 	MPU6050_SetMemoryStartAddress(0x06);
+// 	MPU6050_SetMemoryBank(0, false, false);
+// 	
+// 	/* setup weird slave stuff (?) */
+// 	MPU6050_SetSlaveAddress(0, 0x7F);
+// 	MPU6050_SetI2CMasterModeEnabled(false);
+// 	MPU6050_SetSlaveAddress(0, 0x68);
+// 	MPU6050_ResetI2CMaster();
+// 	_delay_ms(_MPU_WAKEUP_TIME_MS);
+// 	MPU6050_SetClockSource(_CLKSEL_Z_AXIS_GYROSCOPE_REFERENCE);
+// 	
+// 	MPU6050_SetIntEnabled(1 << MPU6050_INTERRUPT_FIFO_OFLOW_BIT | 1 << MPU6050_INTERRUPT_DMP_INT_BIT);
+// 	
+// 	MPU6050_SetRate(4); /* 1khz / (1 + 4) = 200 Hz */
+// 	
+// 	MPU6050_SetExternalFrameSync(_ES_TEMP_OUT_L);
+// 	
+// 	MPU6050_SetDLPFMode(_DLPF_CFG_44A_42G_HZ);
+// 	
+// 	MPU6050_SetFullScaleGyroRange(_GYRO_FULL_SCALE_RANGE_2000);
+// 	
+// 	if ( !MPU6050_WriteProgMemoryBlock(dmpMemory, MPU6050_DMP_CODE_SIZE) )
+// 	{
+// 		return 1;
+// 	}
+// 	
+// 	/* Set the FIFO Rate Divisor int the DMP Firmware Memory */
+// 	uint8_t dmpUpdate[] = {0x00, MPU6050_DMP_FIFO_RATE_DIVISOR};
+// 	MPU6050_WriteMemoryBlock(dmpUpdate, 0x02, 0x02, 0x16); /* Lets write the dmpUpdate data to the Firmware image, we have 2 bytes to write in bank 0x02 with the Offset 0x16 */
+// 	
+// 	/* write start address MSB into register */
+// 	MPU6050_SetDMPConfig1(0x03);
+// 	/* write start address LSB into register */
+// 	MPU6050_SetDMPConfig2(0x00);
+// 	
+// 	MPU6050_SetOTPBankValid(false);
+// 	
+// 	MPU6050_SetMotionDetectionThreshold(2);
+// 	
+// 	MPU6050_SetZeroMotionDetectionThreshold(156);
+// 	
+// 	MPU6050_SetMotionDetectionDuration(80);
+// 	
+// 	MPU6050_SetZeroMotionDetectionDuration(0);
+// 	MPU6050_SetFIFOEnabled(true);
+// 	
+// 	MPU6050_ResetDMP();
+// 	
+// 	MPU6050_SetDMPEnabled(false);
+// 	
+// 	dmpPacketSize = 42;
+// 	
+// 	MPU6050_ResetFIFO();
+// 	MPU6050_GetIntStatus();
 	
 	return 0; /* success */
 }
