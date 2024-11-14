@@ -55,6 +55,12 @@ typedef enum {
 } data_type_t;
 
 typedef struct {
+	float angle;
+	float bias;
+	float P[2][2]/* = {{0, 0}, {0, 0}}*/;
+} kalman_t;
+
+typedef struct {
 	int16_t Xaccel_raw;
 	int16_t Yaccel_raw;
 	int16_t Zaccel_raw;
@@ -70,9 +76,9 @@ typedef struct {
 } raw_axis_data_t;
 
 typedef struct {
-	int16_t F_x_accel;
-	int16_t F_y_accel;
-	int16_t F_z_accel;
+	float F_x_accel;
+	float F_y_accel;
+	float F_z_accel;
 	float x_gyro, x_accel;
 	float y_gyro, y_accel;
 	float z_gyro, z_accel;	
@@ -98,6 +104,7 @@ void UART_SendUint16(uint16_t value);
 int16_t MPU6050_Calibrate(int16_t *Xg, int16_t *Yg, int16_t *Zg);
 /*================================================================================*/
 float kalman_filter(float measured_angle, float gyro_rate, float dt);//dt -> sec
+float All_axis_kalman_filter(kalman_t *axis, float measured_angle, float gyro_rate, float dt);
 float moving_average(float new_value);
 
 #endif /* MAIN_H_ */

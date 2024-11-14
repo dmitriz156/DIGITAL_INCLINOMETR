@@ -61,6 +61,9 @@ char str[_STR_LENGHT_FOR_LCD]; /* string for convert */
 /* ---------------------------------------- */
 raw_axis_data_t All_Axis_ROW = {0};
 axis_data_t		All_Axis     = {0};
+kalman_t        X_Axis       = {0};
+kalman_t        Y_Axis       = {0};
+kalman_t        Z_Axis       = {0};
 
 volatile float X_angle = 0;
 volatile float Y_angle = 0;
@@ -167,13 +170,22 @@ int main(void)
 		MPU6050_GetRawGyro(&All_Axis_ROW.Xgyro_raw, 20);
 		
 		wdt_reset();
+		All_Axis.F_x_accel = All_axis_kalman_filter(&X_Axis, (float)All_Axis_ROW.Xaccel_raw, (float)All_Axis_ROW.Xgyro_raw, 0.0053f);
+		All_Axis.F_y_accel = All_axis_kalman_filter(&Y_Axis, (float)All_Axis_ROW.Yaccel_raw, (float)All_Axis_ROW.Ygyro_raw, 0.0053f);
+		All_Axis.F_z_accel = All_axis_kalman_filter(&Z_Axis, (float)All_Axis_ROW.Zaccel_raw, (float)All_Axis_ROW.Zgyro_raw, 0.0053f);
 		
-		All_Axis.x_accel = ( _MPU_RAD_TO_DEG * ( atan2( -All_Axis_ROW.Yaccel_raw , -All_Axis_ROW.Zaccel_raw ) + _MATH_PI ) );
-		All_Axis.y_accel = ( _MPU_RAD_TO_DEG * ( atan2( -All_Axis_ROW.Xaccel_raw , -All_Axis_ROW.Zaccel_raw ) + _MATH_PI ) );
-		All_Axis.z_accel = ( _MPU_RAD_TO_DEG * ( atan2( -All_Axis_ROW.Yaccel_raw , -All_Axis_ROW.Xaccel_raw ) + _MATH_PI ) );
-		All_Axis.x_gyro = ((All_Axis_ROW.Xgyro_raw /*- offsetGX*/) / _MPU_GYRO_SENS_250_SENS /*/ (1000 / 120)*/);
-		All_Axis.y_gyro = ((All_Axis_ROW.Ygyro_raw /*- offsetGY*/) / _MPU_GYRO_SENS_250_SENS /*/ (1000 / 120)*/);
-		All_Axis.z_gyro = ((All_Axis_ROW.Zgyro_raw /*- offsetGZ*/) / _MPU_GYRO_SENS_250_SENS /*/ (1000 / 120)*/);
+		#ifdef DEBUG_MOD
+		Ploter_angle = ( _MPU_RAD_TO_DEG * ( atan2( -All_Axis_ROW.Xaccel_raw , -All_Axis_ROW.Zaccel_raw ) + _MATH_PI ) );
+		#endif
+		Y_angle = ( _MPU_RAD_TO_DEG * ( atan2( -All_Axis.F_x_accel , -All_Axis.F_z_accel ) + _MATH_PI ) );
+
+		
+// 		All_Axis.x_accel = ( _MPU_RAD_TO_DEG * ( atan2( -All_Axis_ROW.Yaccel_raw , -All_Axis_ROW.Zaccel_raw ) + _MATH_PI ) );
+// 		All_Axis.y_accel = ( _MPU_RAD_TO_DEG * ( atan2( -All_Axis_ROW.Xaccel_raw , -All_Axis_ROW.Zaccel_raw ) + _MATH_PI ) );
+// 		All_Axis.z_accel = ( _MPU_RAD_TO_DEG * ( atan2( -All_Axis_ROW.Yaccel_raw , -All_Axis_ROW.Xaccel_raw ) + _MATH_PI ) );
+// 		All_Axis.x_gyro = ((All_Axis_ROW.Xgyro_raw /*- offsetGX*/) / _MPU_GYRO_SENS_250_SENS /*/ (1000 / 120)*/);
+// 		All_Axis.y_gyro = ((All_Axis_ROW.Ygyro_raw /*- offsetGY*/) / _MPU_GYRO_SENS_250_SENS /*/ (1000 / 120)*/);
+// 		All_Axis.z_gyro = ((All_Axis_ROW.Zgyro_raw /*- offsetGZ*/) / _MPU_GYRO_SENS_250_SENS /*/ (1000 / 120)*/);
 
 // 		//===============Complementary filter begin================
 // 		filtered_Y = (int16_t)((0.98 * y_accel) - (0.02 * y_gyro));
@@ -185,11 +197,11 @@ int main(void)
 // 		y_accel_OLD = filt_Y;
 // 		//========================================================
 
-		if (All_Axis.y_accel < 1.0f || All_Axis.y_accel > 359.0f)
-		{
-		}
-		Y_angle = kalman_filter(All_Axis.y_accel, All_Axis.y_gyro, 0.0053f); //5.3 ms
-		Ploter_angle = Y_angle;
+// 		if (All_Axis.y_accel < 1.0f || All_Axis.y_accel > 359.0f)
+// 		{
+// 		}
+		//Y_angle = kalman_filter(All_Axis.y_accel, All_Axis.y_gyro, 0.0053f); //5.3 ms
+		//Ploter_angle = Y_angle;
 		
 	//====================================Output depending on the type BEGIN======================================
 		if (Angle_Type == RB_DATA_TYPE){
@@ -267,6 +279,40 @@ float kalman_filter(float measured_angle, float gyro_rate, float dt) {
 	return angle;
 }
 
+float All_axis_kalman_filter(kalman_t *axis, float measured_angle, float gyro_rate, float dt) {
+
+	// Перший крок: оцінка нового стану на основі прогнозу
+	axis->angle += dt * (gyro_rate - axis->bias);
+
+	// Другий крок: оновлення коваріаційної матриці на основі прогнозу
+	axis->P[0][0] += dt * (dt * axis->P[1][1] - axis->P[0][1] - axis->P[1][0] + KALMAN_ACEL_Q);
+	axis->P[0][1] -= dt * axis->P[1][1];
+	axis->P[1][0] -= dt * axis->P[1][1];
+	axis->P[1][1] += KALMAN_GYRO_Q * dt;
+
+	// Третій крок: вирахування калманівського коефіцієнту
+	float S = axis->P[0][0] + KALMAN_R;
+	float K[2]; // калманівський коефіцієнт
+	K[0] = axis->P[0][0] / S;
+	K[1] = axis->P[1][0] / S;
+
+	// Четвертий крок: оновлення оцінки на основі вимірів
+	float y = measured_angle - axis->angle; // помилка виміру
+	axis->angle += K[0] * y;
+	axis->bias += K[1] * y;
+
+	// П'ятий крок: оновлення коваріаційної матриці на основі вимірів
+	float P00_temp = axis->P[0][0];
+	float P01_temp = axis->P[0][1];
+
+	axis->P[0][0] -= K[0] * P00_temp;
+	axis->P[0][1] -= K[0] * P01_temp;
+	axis->P[1][0] -= K[1] * P00_temp;
+	axis->P[1][1] -= K[1] * P01_temp;
+
+	return axis->angle;
+}
+
 void arduino_ploter(void)
 {
 	TX_ON;
@@ -280,7 +326,7 @@ void arduino_ploter(void)
 // 	MAX_Accel_Value_Z = 0;
 	
 	UART_Transmit_String("angle_y:, filter_y \r\n");
-	UART_PrintLn("%d,%d", (int16_t)All_Axis.y_accel, (int16_t)Ploter_angle);
+	UART_PrintLn("%d,%d", (int16_t)Ploter_angle, (int16_t)Y_angle);
 }
 
 void UART_data_procesing(void)
