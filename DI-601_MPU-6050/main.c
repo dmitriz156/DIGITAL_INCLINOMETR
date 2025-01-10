@@ -9,33 +9,13 @@
 #include <avr/io.h>
 #include <util/delay.h>
 #include <avr/interrupt.h>
+#include <avr/eeprom.h>
 #include <avr/wdt.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
 
 //#define DEBUG_MOD
-
-#define UART_BUFFER_SIZE		128
-/*===============Constants that determine the types of protractors=================*/
-// #define MODULAR_RB_DATA_TYPE		0xAA
-// #define RB_DATA_TYPE				0xFA
-// #define BOLLARD_DATA_TYPE		0xBD
-#define ADDRESS_CHANGE_KEY			111
-#define DATA_PACKAGE_SIZE			7
-/*=================================================================================*/
-#define ANGLE_SENS_ADDRESS_1		1
-#define ANGLE_SENS_ADDRESS_2		2
-#define ANGLE_SENS_ADDRESS_3		3
-#define ANGLE_SENS_ADDRESS_4		4
-/*=================================================================================*/
-#define MODUL_ADDRESS_1				11
-#define MODUL_ADDRESS_2				12
-#define MODUL_ADDRESS_3				13
-#define MODUL_ADDRESS_4				14
-/*=================================================================================*/
-
-
 
 // Constants
 #define TAU 0.98  // Комплементарний коефіцієнт
@@ -102,13 +82,14 @@ volatile uint8_t rx_buffer[DATA_PACKAGE_SIZE];
 volatile uint8_t tx_buffer[DATA_PACKAGE_SIZE];
 //volatile uint8_t address_change_Buffer[DATA_PACKAGE_SIZE];
 
+volatile uint8_t LED_Elive_Counter = 0; 
 volatile uint8_t Address_Change_Counter = 0;
 volatile bool Address_Change_FLAG = 0;
 volatile bool UART_RX_Complete_FLAG = 0;
 volatile bool UART_TX_Complete_FLAG = 0;
 volatile uint8_t UART_TX_Pre_Counter = 0;
 volatile data_type_t Angle_Type = 0;
-volatile uint8_t Sensor_Addres = ANGLE_SENS_ADDRESS_1;
+volatile uint8_t Sensor_Addres = 0;
 bool AvrgFLAG = 0;
 uint8_t rx_counter, rx_counter;
 // This flag is set on USART Receiver buffer overflow
@@ -150,6 +131,12 @@ float byte_to_float(uint8_t *array, int start_index) {
 
 int main(void)
 {
+	Sensor_Addres = eeprom_read_byte((uint8_t*)EEPROM_SENS_ADDR);
+	if (Sensor_Addres > 4 || Sensor_Addres == 0)
+	{
+		Sensor_Addres = ANGLE_SENS_ADDRESS_1;
+		eeprom_write_byte((uint8_t*)EEPROM_SENS_ADDR, Sensor_Addres);
+	}
 	sei();
 	wdt_enable(WDTO_1S);
 	_LCD_PORT_DIR = _ALL_OUTPUT;
@@ -161,6 +148,7 @@ int main(void)
 	UART_Init(UBRR_SPEED);
 	RX_TX_DIRECTION = 1;
 	LED_OUT = 1;
+	LED = 1;
 	_delay_ms(100);
 	//MPU6050_Calibrate(offsetGX, offsetGY, offsetGZ);
 	/* ---------------------------------------- */
@@ -330,7 +318,7 @@ void arduino_ploter(void)
 }
 
 void UART_data_procesing(void)
-{
+ {
 	if ( (rx_buffer[0] == Sensor_Addres) && (crc(rx_buffer, DATA_PACKAGE_SIZE-1) == rx_buffer[6]))
 	{
 		LED = !LED;
@@ -341,8 +329,17 @@ void UART_data_procesing(void)
 			if (Address_Change_Counter < 10)
 			{
 				Address_Change_Counter ++;
-			}else{
-				Sensor_Addres = rx_buffer[4];
+			}else if (Address_Change_Counter == 10){
+				if (rx_buffer[4] <= ANGLE_SENS_ADDRESS_4 && rx_buffer[4] != 0)
+				{
+					Sensor_Addres = rx_buffer[4];
+					eeprom_write_byte((uint8_t*)EEPROM_SENS_ADDR, Sensor_Addres);
+				}
+				else
+				{
+					Sensor_Addres = ANGLE_SENS_ADDRESS_1;
+					eeprom_write_byte((uint8_t*)EEPROM_SENS_ADDR, Sensor_Addres);
+				}
 				Address_Change_Counter = 0;
 			}
 		}else{
@@ -406,11 +403,21 @@ uint8_t crc( uint8_t *code, uint8_t size)
 
 ISR(TIMER2_COMP_vect) {
 	// Код, який виконується кожну 1 мс
+	if (LED_Elive_Counter > 0){ LED_Elive_Counter --; }
 	if (UART_RX_Complete_FLAG)
 	{
 		UART_data_procesing();
 		UART_RX_Complete_FLAG = 0;
+		LED_Elive_Counter = 200;
 		return;
+	}
+	else
+	{
+		if (LED_Elive_Counter == 0)
+		{
+			LED_Elive_Counter = 200;
+			LED = !LED;
+		}
 	}
 	if (UART_TX_Pre_Counter)
 	{

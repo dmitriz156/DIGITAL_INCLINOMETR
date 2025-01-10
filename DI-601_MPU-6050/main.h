@@ -4,6 +4,26 @@
 #include <stdio.h>
 #include <stdbool.h>
 
+#define UART_BUFFER_SIZE		128
+/*===============Constants that determine the types of protractors=================*/
+// #define MODULAR_RB_DATA_TYPE		0xAA
+// #define RB_DATA_TYPE				0xFA
+// #define BOLLARD_DATA_TYPE		0xBD
+#define ADDRESS_CHANGE_KEY			111
+#define DATA_PACKAGE_SIZE			7
+/*=================================================================================*/
+#define ANGLE_SENS_ADDRESS_1		1
+#define ANGLE_SENS_ADDRESS_2		2
+#define ANGLE_SENS_ADDRESS_3		3
+#define ANGLE_SENS_ADDRESS_4		4
+/*=================================================================================*/
+#define MODUL_ADDRESS_1				11
+#define MODUL_ADDRESS_2				12
+#define MODUL_ADDRESS_3				13
+#define MODUL_ADDRESS_4				14
+#define EEPROM_SENS_ADDR            0
+/*=================================================================================*/
+
 typedef struct
 {
 	unsigned char Bit0:1;
