@@ -10,7 +10,11 @@
 // #define RB_DATA_TYPE				0xFA
 // #define BOLLARD_DATA_TYPE		0xBD
 #define ADDRESS_CHANGE_KEY			111
-#define DATA_PACKAGE_SIZE			7
+#define POSITION_CHANGE_KEY         112
+#define DATA_PACKAGE_SIZE			7 //7-1
+#define OLD_DATA_PACKAGE_SIZE       5 //5-1
+#define INDEX_DATA_TYPE   			2
+#define INDEX_ADDR_CHANGE_KEY       3
 /*=================================================================================*/
 #define ANGLE_SENS_ADDRESS_1		1
 #define ANGLE_SENS_ADDRESS_2		2
@@ -22,6 +26,7 @@
 #define MODUL_ADDRESS_3				13
 #define MODUL_ADDRESS_4				14
 #define EEPROM_SENS_ADDR            0
+#define EEPROM_POSITION             1
 /*=================================================================================*/
 
 typedef struct

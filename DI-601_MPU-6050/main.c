@@ -49,6 +49,9 @@ volatile float X_angle = 0;
 volatile float Y_angle = 0;
 volatile float Z_angle = 0;
 float Ploter_angle = 0;
+float Prev_Y_angle = 0;
+
+int16_t Angle_OLD;
 
 uint8_t UART_NeedToSend = 0;
 uint8_t sensitivity = 0;
@@ -84,12 +87,15 @@ volatile uint8_t tx_buffer[DATA_PACKAGE_SIZE];
 
 volatile uint8_t LED_Elive_Counter = 0; 
 volatile uint8_t Address_Change_Counter = 0;
+volatile uint8_t Position_Change_Counter = 0;
 volatile bool Address_Change_FLAG = 0;
+volatile bool Old_Data_Flag = 0;
 volatile bool UART_RX_Complete_FLAG = 0;
 volatile bool UART_TX_Complete_FLAG = 0;
 volatile uint8_t UART_TX_Pre_Counter = 0;
 volatile data_type_t Angle_Type = 0;
 volatile uint8_t Sensor_Addres = 0;
+volatile uint8_t Sensor_Position = 0;
 bool AvrgFLAG = 0;
 uint8_t rx_counter, rx_counter;
 // This flag is set on USART Receiver buffer overflow
@@ -132,6 +138,7 @@ float byte_to_float(uint8_t *array, int start_index) {
 int main(void)
 {
 	Sensor_Addres = eeprom_read_byte((uint8_t*)EEPROM_SENS_ADDR);
+	Sensor_Position = eeprom_read_byte((uint8_t*)EEPROM_POSITION);
 	if (Sensor_Addres > 4 || Sensor_Addres == 0)
 	{
 		Sensor_Addres = ANGLE_SENS_ADDRESS_1;
@@ -166,8 +173,7 @@ int main(void)
 		Ploter_angle = ( _MPU_RAD_TO_DEG * ( atan2( -All_Axis_ROW.Xaccel_raw , -All_Axis_ROW.Zaccel_raw ) + _MATH_PI ) );
 		#endif
 		Y_angle = ( _MPU_RAD_TO_DEG * ( atan2( -All_Axis.F_x_accel , -All_Axis.F_z_accel ) + _MATH_PI ) );
-
-		
+		//if (Lutch == 0) 
 // 		All_Axis.x_accel = ( _MPU_RAD_TO_DEG * ( atan2( -All_Axis_ROW.Yaccel_raw , -All_Axis_ROW.Zaccel_raw ) + _MATH_PI ) );
 // 		All_Axis.y_accel = ( _MPU_RAD_TO_DEG * ( atan2( -All_Axis_ROW.Xaccel_raw , -All_Axis_ROW.Zaccel_raw ) + _MATH_PI ) );
 // 		All_Axis.z_accel = ( _MPU_RAD_TO_DEG * ( atan2( -All_Axis_ROW.Yaccel_raw , -All_Axis_ROW.Xaccel_raw ) + _MATH_PI ) );
@@ -185,9 +191,6 @@ int main(void)
 // 		y_accel_OLD = filt_Y;
 // 		//========================================================
 
-// 		if (All_Axis.y_accel < 1.0f || All_Axis.y_accel > 359.0f)
-// 		{
-// 		}
 		//Y_angle = kalman_filter(All_Axis.y_accel, All_Axis.y_gyro, 0.0053f); //5.3 ms
 		//Ploter_angle = Y_angle;
 		
@@ -200,9 +203,6 @@ int main(void)
 		}else{
 			Y_angle = Y_angle - 360.0f;
 		}
-		//===============================
-		//Y_angle = moving_average(Y_angle);
-		//===============================
 		
 		bool temp_flag = 0;
 		#ifdef DEBUG_MOD
@@ -221,6 +221,16 @@ int main(void)
 				MAX_Accel_Value_Z = All_Axis_ROW.Zaccel_raw;
 			}
 		}
+		//>>>Angle formation remained the same as in OLD version<<<
+		if (Sensor_Position){
+			//>>Standart Z/X
+			Angle_OLD = 10000 * atan( (All_Axis.F_z_accel / All_Axis.F_x_accel) );
+		} else {
+			//>>Mobile modular SB (N position) X/Z
+			Angle_OLD = 10000 * atan( (-All_Axis.F_x_accel / All_Axis.F_z_accel) );
+		}
+		
+		Prev_Y_angle = Y_angle;
 	//=====================================Output depending on the type END=======================================
 	#ifdef DEBUG_MOD
 		arduino_ploter();
@@ -307,23 +317,45 @@ void arduino_ploter(void)
 	
 	//====!!!!!!!!!!!====cod to display in arduino ide monitor=====!!!!!!!!!=======
 	//%.2f
-// 	UART_Transmit_String("MAX_A_X:,MAX_A_Y:,MAX_A_Z:\r\n");
-// 	UART_PrintLn("%d,%d,%d", MAX_Accel_Value_X, MAX_Accel_Value_Y, MAX_Accel_Value_Z);
-// 	MAX_Accel_Value_X = 0;
-// 	MAX_Accel_Value_Y = 0;
-// 	MAX_Accel_Value_Z = 0;
-	
 	UART_Transmit_String("angle_y:, filter_y \r\n");
 	UART_PrintLn("%d,%d", (int16_t)Ploter_angle, (int16_t)Y_angle);
 }
 
 void UART_data_procesing(void)
- {
+{
+	uint8_t Old_Data_Addres = 0;
+	
+	if (Old_Data_Flag == 1)
+	{
+		if (Sensor_Addres == 1) {
+			Old_Data_Addres = Sensor_Addres;
+		} else if (Sensor_Addres > 1) {
+			Old_Data_Addres = Sensor_Addres + 1;
+		}
+		
+		if ( (rx_buffer[0] == Old_Data_Addres) && (crc(rx_buffer, OLD_DATA_PACKAGE_SIZE-1) == rx_buffer[4]))
+		{
+			LED = !LED;
+			memset(rx_buffer, 0, DATA_PACKAGE_SIZE);
+			memset(tx_buffer, 0, DATA_PACKAGE_SIZE);
+			tx_buffer[0] = Old_Data_Addres;
+
+			tx_buffer[1] = (Angle_OLD >> 8) & 0xFF;//MSB
+			tx_buffer[2] = Angle_OLD & 0xFF;//LSB
+				
+			tx_buffer[3] = Old_Data_Addres;
+			tx_buffer[4] = crc(tx_buffer, OLD_DATA_PACKAGE_SIZE-1);           //обрахувати контрольну суму і вислати останнім байтом
+			
+			UART_TX_Pre_Counter = 1;
+		}
+		return;
+	}
+
 	if ( (rx_buffer[0] == Sensor_Addres) && (crc(rx_buffer, DATA_PACKAGE_SIZE-1) == rx_buffer[6]))
 	{
 		LED = !LED;
 		Angle_Type = rx_buffer[2];
-		
+			
 		if (rx_buffer[3] == ADDRESS_CHANGE_KEY)
 		{
 			if (Address_Change_Counter < 10)
@@ -345,14 +377,32 @@ void UART_data_procesing(void)
 		}else{
 			Address_Change_Counter = 0;
 		}
+			
+		if (rx_buffer[3] == POSITION_CHANGE_KEY)
+		{
+			if (Position_Change_Counter < 10)
+			{
+				Position_Change_Counter ++;
+			} else if (Position_Change_Counter == 10){
+				if (Sensor_Position == 0){
+					Sensor_Position = 0xFF;
+					eeprom_write_byte((uint8_t*)EEPROM_POSITION, 0xFF);
+				} else {
+					Sensor_Position = 0;
+					eeprom_write_byte((uint8_t*)EEPROM_POSITION, 0);
+				}
+				Position_Change_Counter = 0;
+			}
+		}else{
+			Position_Change_Counter = 0;
+		}
 		memset(rx_buffer, 0, DATA_PACKAGE_SIZE);
-		
+			
 		memset(tx_buffer, 0, DATA_PACKAGE_SIZE);
 		tx_buffer[0] = Sensor_Addres;
 		if (Angle_Type == RB_DATA_TYPE || Angle_Type == MODULAR_RB_DATA_TYPE)
 		{
 			float_to_byte(Y_angle, tx_buffer, 1);
-			//float_to_byte(filt_Y, tx_buffer, 1);
 		}
 		if (Angle_Type == BOLLARD_DATA_TYPE)
 		{
@@ -366,20 +416,21 @@ void UART_data_procesing(void)
 				tx_buffer[1] = (MAX_Accel_Value_Z >> 8) & 0xFF;//MSB
 				tx_buffer[2] = MAX_Accel_Value_Z & 0xFF;//LSB
 			}
-			
+				
 			tx_buffer[3] = (MAX_Accel_Value_Y >> 8) & 0xFF;
 			tx_buffer[4] = MAX_Accel_Value_Y & 0xFF;
-			
+				
 			MAX_Accel_Value_X = 11;
 			MAX_Accel_Value_Y = 11;
-			MAX_Accel_Value_Z = 11;	
-			
+			MAX_Accel_Value_Z = 11;
+				
 		}
 		tx_buffer[5] = Sensor_Addres;
 		tx_buffer[6] = crc(tx_buffer, DATA_PACKAGE_SIZE-1);           //обрахувати контрольну суму і вислати останнім байтом
-		
+			
 		UART_TX_Pre_Counter = 1;
 	}
+
 }
 
 //функкція обчислення СРС
@@ -403,13 +454,25 @@ uint8_t crc( uint8_t *code, uint8_t size)
 
 ISR(TIMER2_COMP_vect) {
 	// Код, який виконується кожну 1 мс
+	wdt_reset();
+	if (UART_TX_Pre_Counter)
+	{
+		UART_TX_Pre_Counter = 0;
+		TX_ON;
+		UCSRB |= (1 << TXB8);
+		if (Old_Data_Flag) tx_counter = (OLD_DATA_PACKAGE_SIZE-1);
+		else tx_counter = (DATA_PACKAGE_SIZE-1);
+		//Передавання пакету данних
+		UDR = tx_buffer[0];
+	}
+	
 	if (LED_Elive_Counter > 0){ LED_Elive_Counter --; }
+		
 	if (UART_RX_Complete_FLAG)
 	{
 		UART_data_procesing();
 		UART_RX_Complete_FLAG = 0;
 		LED_Elive_Counter = 200;
-		return;
 	}
 	else
 	{
@@ -419,30 +482,29 @@ ISR(TIMER2_COMP_vect) {
 			LED = !LED;
 		}
 	}
-	if (UART_TX_Pre_Counter)
-	{
-		UART_TX_Pre_Counter = 0;
-		TX_ON;
-		UCSRB |= (1 << TXB8);
-		tx_counter = (DATA_PACKAGE_SIZE-1);
-		//Передавання пакету данних
-		UDR = tx_buffer[0];
-	}
 }
 
 ISR(USART_RXC_vect)
 {
 	//first_bit = (UCSRB & (1 << RXB8));
-	
 	//Якщо отримали ознаку першого байту, - обнулити лічильник буферу
 	if (USART_RX_9BIT == 1)
 	{
 		rx_counter = 0;
-		//first_bit = 0;
+		Old_Data_Flag = 0;
 	}
-	rx_buffer[rx_counter] = UDR;
-	if (rx_counter < DATA_PACKAGE_SIZE-1)
-	{
+	rx_buffer [rx_counter] = UDR;
+	if (rx_counter == INDEX_DATA_TYPE) {
+		if (rx_buffer [INDEX_DATA_TYPE] == MODULAR_RB_DATA_TYPE || rx_buffer [INDEX_DATA_TYPE] == RB_DATA_TYPE || rx_buffer [INDEX_DATA_TYPE] == BOLLARD_DATA_TYPE) {
+			Old_Data_Flag = 0;
+		} else {
+			Old_Data_Flag = 1;
+		}
+	}
+	if (rx_counter < DATA_PACKAGE_SIZE - 1) {
+		if (Old_Data_Flag == 1 && (rx_counter == OLD_DATA_PACKAGE_SIZE - 1)) {
+			UART_RX_Complete_FLAG = 1;
+		}
 		rx_counter ++;
 	}
 	else
@@ -459,10 +521,15 @@ ISR(USART_TXC_vect)
 		tx_counter--;
 		UCSRB &= ~(1 << TXB8);       //Скинули 9-й біт
 		
-		UDR = tx_buffer[(DATA_PACKAGE_SIZE-1) - tx_counter];
+		if (Old_Data_Flag) {
+			UDR = tx_buffer[(OLD_DATA_PACKAGE_SIZE-1) - tx_counter];
+		} else {
+			UDR = tx_buffer[(DATA_PACKAGE_SIZE-1) - tx_counter];
+		}
 	}
 	else
 	{
+		Old_Data_Flag = 0;
 		RX_ON;
 	}
 }

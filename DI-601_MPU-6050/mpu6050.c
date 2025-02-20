@@ -343,8 +343,8 @@ uint8_t MPU6050_AutoInit(uint16_t _time_out) /* Function for initialize MPU6050 
 	MPU6050_Config.InterruptConfig.IntOpen    = _INT_OPEN_PUSH_PULL; /* Set pin mode to push pull */
 	MPU6050_Config.InterruptConfig.IntLevel   = _INT_LEVEL_ACTIVE_HIGH; /* Set pin level to Active high */
 	MPU6050_Config.InterruptConfig.LatchIntEn = _LATCH_INT_EN_50US_PULSE; /* Set the INT pin emits a 50us long pulse */
-	MPU6050_Config.GyroFullScaleRange         = _GYRO_FULL_SCALE_RANGE_250; /* Full scale range +/- 2000 degree/S */
-	MPU6050_Config.AccelFullScaleRange        = _ACCEL_FULL_SCALE_RANGE_2G; /* Full scale range 16g */
+	MPU6050_Config.GyroFullScaleRange         = _GYRO_FULL_SCALE_RANGE_250; /*set 250 deg/S | Full scale range +/- 2000 degree/S */
+	MPU6050_Config.AccelFullScaleRange        = _ACCEL_FULL_SCALE_RANGE_2G; /*set 2g | Full scale range 16g */
 	MPU6050_Config.ClockSelection             = _CLKSEL_X_AXIS_GYROSCOPE_REFERENCE; /* X axis gyroscope reference frequency */
 	
 	/* ----------- Initialize Register ----------- */
