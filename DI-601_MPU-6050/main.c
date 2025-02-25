@@ -347,6 +347,7 @@ void UART_data_procesing(void)
 			tx_buffer[4] = crc(tx_buffer, OLD_DATA_PACKAGE_SIZE-1);           //обрахувати контрольну суму і вислати останнім байтом
 			
 			UART_TX_Pre_Counter = 1;
+			TX_ON;
 		}
 		return;
 	}
@@ -429,6 +430,7 @@ void UART_data_procesing(void)
 		tx_buffer[6] = crc(tx_buffer, DATA_PACKAGE_SIZE-1);           //обрахувати контрольну суму і вислати останнім байтом
 			
 		UART_TX_Pre_Counter = 1;
+		TX_ON;
 	}
 
 }
@@ -458,7 +460,7 @@ ISR(TIMER2_COMP_vect) {
 	if (UART_TX_Pre_Counter)
 	{
 		UART_TX_Pre_Counter = 0;
-		TX_ON;
+		//TX_ON;
 		UCSRB |= (1 << TXB8);
 		if (Old_Data_Flag) tx_counter = (OLD_DATA_PACKAGE_SIZE-1);
 		else tx_counter = (DATA_PACKAGE_SIZE-1);
