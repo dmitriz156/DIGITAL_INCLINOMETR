@@ -93,6 +93,7 @@ volatile bool Old_Data_Flag = 0;
 volatile bool UART_RX_Complete_FLAG = 0;
 volatile bool UART_TX_Complete_FLAG = 0;
 volatile uint8_t UART_TX_Pre_Counter = 0;
+volatile uint8_t UART_Idle_Line_Counter = 0;
 volatile data_type_t Angle_Type = 0;
 volatile uint8_t Sensor_Addres = 0;
 volatile uint8_t Sensor_Position = 0;
@@ -151,6 +152,7 @@ int main(void)
 	
 	/* MPU6050 Init */
 	MPU6050_AutoInit(100);
+	Timer_0_Init();
 	Timer_2_Init();
 	UART_Init(UBRR_SPEED);
 	RX_TX_DIRECTION = 1;
@@ -346,8 +348,8 @@ void UART_data_procesing(void)
 			tx_buffer[3] = Old_Data_Addres;
 			tx_buffer[4] = crc(tx_buffer, OLD_DATA_PACKAGE_SIZE-1);           //обрахувати контрольну суму ≥ вислати останн≥м байтом
 			
-			UART_TX_Pre_Counter = 1;
 			TX_ON;
+			UART_TX_Pre_Counter = 1;
 		}
 		return;
 	}
@@ -429,8 +431,8 @@ void UART_data_procesing(void)
 		tx_buffer[5] = Sensor_Addres;
 		tx_buffer[6] = crc(tx_buffer, DATA_PACKAGE_SIZE-1);           //обрахувати контрольну суму ≥ вислати останн≥м байтом
 			
-		UART_TX_Pre_Counter = 1;
 		TX_ON;
+		UART_TX_Pre_Counter = 1;
 	}
 
 }
@@ -454,10 +456,24 @@ uint8_t crc( uint8_t *code, uint8_t size)
 }
 //----------------------------------------------------------------------------------
 
+ISR(TIMER0_OVF_vect) {
+	TCNT0 = 75;
+	if (UART_Idle_Line_Counter == 1 && (rx_counter == OLD_DATA_PACKAGE_SIZE))
+	{
+		Old_Data_Flag = 1;
+		UART_RX_Complete_FLAG = 1;
+	}
+	
+	if (UART_Idle_Line_Counter > 0)
+	{
+		UART_Idle_Line_Counter --;
+	}
+}
+
 ISR(TIMER2_COMP_vect) {
 	//  од, €кий виконуЇтьс€ кожну 1 мс
 	wdt_reset();
-	if (UART_TX_Pre_Counter)
+	if (UART_TX_Pre_Counter == 1)
 	{
 		UART_TX_Pre_Counter = 0;
 		//TX_ON;
@@ -470,6 +486,11 @@ ISR(TIMER2_COMP_vect) {
 	
 	if (LED_Elive_Counter > 0){ LED_Elive_Counter --; }
 		
+	if(UART_TX_Complete_FLAG){
+		UART_TX_Complete_FLAG = 0;
+		RX_ON;
+	}
+		
 	if (UART_RX_Complete_FLAG)
 	{
 		UART_data_procesing();
@@ -478,6 +499,7 @@ ISR(TIMER2_COMP_vect) {
 	}
 	else
 	{
+		if(LED_Elive_Counter == 1){ RX_ON; }
 		if (LED_Elive_Counter == 0)
 		{
 			LED_Elive_Counter = 200;
@@ -488,31 +510,49 @@ ISR(TIMER2_COMP_vect) {
 
 ISR(USART_RXC_vect)
 {
-	//first_bit = (UCSRB & (1 << RXB8));
-	//якщо отримали ознаку першого байту, - обнулити л≥чильник буферу
 	if (USART_RX_9BIT == 1)
 	{
 		rx_counter = 0;
 		Old_Data_Flag = 0;
 	}
 	rx_buffer [rx_counter] = UDR;
-	if (rx_counter == INDEX_DATA_TYPE) {
-		if (rx_buffer [INDEX_DATA_TYPE] == MODULAR_RB_DATA_TYPE || rx_buffer [INDEX_DATA_TYPE] == RB_DATA_TYPE || rx_buffer [INDEX_DATA_TYPE] == BOLLARD_DATA_TYPE) {
-			Old_Data_Flag = 0;
-		} else {
-			Old_Data_Flag = 1;
-		}
-	}
+	UART_Idle_Line_Counter = 13;
+	
 	if (rx_counter < DATA_PACKAGE_SIZE - 1) {
-		if (Old_Data_Flag == 1 && (rx_counter == OLD_DATA_PACKAGE_SIZE - 1)) {
-			UART_RX_Complete_FLAG = 1;
-		}
 		rx_counter ++;
 	}
 	else
 	{
 		UART_RX_Complete_FLAG = 1;
+		UART_Idle_Line_Counter = 0;
 	}
+	//first_bit = (UCSRB & (1 << RXB8));
+	//якщо отримали ознаку першого байту, - обнулити л≥чильник буферу
+// 	if (USART_RX_9BIT == 1)
+// 	{
+// 		rx_counter = 0;
+// 		Old_Data_Flag = 0;
+// 	}
+// 	rx_buffer [rx_counter] = UDR;
+// 	UART_Idle_Line_Counter = 0;
+// 	
+// 	if (rx_counter == INDEX_DATA_TYPE) {
+// 		if (rx_buffer [INDEX_DATA_TYPE] == MODULAR_RB_DATA_TYPE || rx_buffer [INDEX_DATA_TYPE] == RB_DATA_TYPE || rx_buffer [INDEX_DATA_TYPE] == BOLLARD_DATA_TYPE) {
+// 			Old_Data_Flag = 0;
+// 		} else {
+// 			Old_Data_Flag = 1;
+// 		}
+// 	}
+// 	if (rx_counter < DATA_PACKAGE_SIZE - 1) {
+// 		if (Old_Data_Flag == 1 && (rx_counter == OLD_DATA_PACKAGE_SIZE - 1)) {
+// 			UART_Idle_Line_Counter = 10;
+// 		}
+// 		rx_counter ++;
+// 	}
+// 	else
+// 	{
+// 		UART_RX_Complete_FLAG = 1;
+// 	}
 }
 
 
@@ -532,7 +572,7 @@ ISR(USART_TXC_vect)
 	else
 	{
 		Old_Data_Flag = 0;
-		RX_ON;
+		UART_TX_Complete_FLAG = 1;
 	}
 }
 
@@ -543,6 +583,12 @@ void Timer_2_Init(void)
 	TCCR2 |= (1 << CS22) | (1 << WGM21);//pres 64, Clear Timer on Compare Match mod
 	TIMSK |= (1 << OCIE2);
 	OCR2 = 230;
+}
+void Timer_0_Init(void)
+{
+	TCCR0 |= (1 << CS01);
+	TIMSK |= (1 << TOIE0);
+	TCNT0 = 75;
 }
 
 void UART_Init(uint16_t ubrr_value)
