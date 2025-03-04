@@ -177,11 +177,8 @@ int main(void)
 		Y_angle = ( _MPU_RAD_TO_DEG * ( atan2( -All_Axis.F_x_accel , -All_Axis.F_z_accel ) + _MATH_PI ) );
 		//if (Lutch == 0) 
 // 		All_Axis.x_accel = ( _MPU_RAD_TO_DEG * ( atan2( -All_Axis_ROW.Yaccel_raw , -All_Axis_ROW.Zaccel_raw ) + _MATH_PI ) );
-// 		All_Axis.y_accel = ( _MPU_RAD_TO_DEG * ( atan2( -All_Axis_ROW.Xaccel_raw , -All_Axis_ROW.Zaccel_raw ) + _MATH_PI ) );
-// 		All_Axis.z_accel = ( _MPU_RAD_TO_DEG * ( atan2( -All_Axis_ROW.Yaccel_raw , -All_Axis_ROW.Xaccel_raw ) + _MATH_PI ) );
+//		...
 // 		All_Axis.x_gyro = ((All_Axis_ROW.Xgyro_raw /*- offsetGX*/) / _MPU_GYRO_SENS_250_SENS /*/ (1000 / 120)*/);
-// 		All_Axis.y_gyro = ((All_Axis_ROW.Ygyro_raw /*- offsetGY*/) / _MPU_GYRO_SENS_250_SENS /*/ (1000 / 120)*/);
-// 		All_Axis.z_gyro = ((All_Axis_ROW.Zgyro_raw /*- offsetGZ*/) / _MPU_GYRO_SENS_250_SENS /*/ (1000 / 120)*/);
 
 // 		//===============Complementary filter begin================
 // 		filtered_Y = (int16_t)((0.98 * y_accel) - (0.02 * y_gyro));
@@ -525,34 +522,8 @@ ISR(USART_RXC_vect)
 	{
 		UART_RX_Complete_FLAG = 1;
 		UART_Idle_Line_Counter = 0;
+		Old_Data_Flag = 0;
 	}
-	//first_bit = (UCSRB & (1 << RXB8));
-	//якщо отримали ознаку першого байту, - обнулити л≥чильник буферу
-// 	if (USART_RX_9BIT == 1)
-// 	{
-// 		rx_counter = 0;
-// 		Old_Data_Flag = 0;
-// 	}
-// 	rx_buffer [rx_counter] = UDR;
-// 	UART_Idle_Line_Counter = 0;
-// 	
-// 	if (rx_counter == INDEX_DATA_TYPE) {
-// 		if (rx_buffer [INDEX_DATA_TYPE] == MODULAR_RB_DATA_TYPE || rx_buffer [INDEX_DATA_TYPE] == RB_DATA_TYPE || rx_buffer [INDEX_DATA_TYPE] == BOLLARD_DATA_TYPE) {
-// 			Old_Data_Flag = 0;
-// 		} else {
-// 			Old_Data_Flag = 1;
-// 		}
-// 	}
-// 	if (rx_counter < DATA_PACKAGE_SIZE - 1) {
-// 		if (Old_Data_Flag == 1 && (rx_counter == OLD_DATA_PACKAGE_SIZE - 1)) {
-// 			UART_Idle_Line_Counter = 10;
-// 		}
-// 		rx_counter ++;
-// 	}
-// 	else
-// 	{
-// 		UART_RX_Complete_FLAG = 1;
-// 	}
 }
 
 
