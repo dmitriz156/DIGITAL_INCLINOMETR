@@ -85,6 +85,11 @@ volatile uint8_t rx_buffer[DATA_PACKAGE_SIZE];
 volatile uint8_t tx_buffer[DATA_PACKAGE_SIZE];
 //volatile uint8_t address_change_Buffer[DATA_PACKAGE_SIZE];
 
+uint8_t MPU_status_A = _MPU_OK;
+uint8_t MPU_status_G = _MPU_OK;
+bool re_init_flag = 0;
+uint8_t ERROR_status_counter = 0;
+uint16_t one_sec_counter = 0;
 volatile uint8_t LED_Elive_Counter = 0; 
 volatile uint8_t Address_Change_Counter = 0;
 volatile uint8_t Position_Change_Counter = 0;
@@ -163,9 +168,22 @@ int main(void)
 	/* ---------------------------------------- */
     while (1) 
     {
-		MPU6050_GetRawAccel(&All_Axis_ROW.Xaccel_raw, 20);
-		MPU6050_GetRawGyro(&All_Axis_ROW.Xgyro_raw, 20);
-		
+		if (re_init_flag == 1)
+		{
+			re_init_flag = 0;
+			MPU6050_AutoInit(100);
+			_delay_ms(10);
+		}
+		MPU_status_A = MPU6050_GetRawAccel(&All_Axis_ROW.Xaccel_raw, 20);
+		MPU_status_G = MPU6050_GetRawGyro(&All_Axis_ROW.Xgyro_raw, 20);
+
+		if ((MPU_status_A == _MPU_ERROR || MPU_status_G == _MPU_ERROR) && ERROR_status_counter == 0){
+			ERROR_status_counter = 5;
+		}
+		if ((MPU_status_A == _MPU_OK || MPU_status_G == _MPU_OK) && ERROR_status_counter != 0){
+			ERROR_status_counter = 0;
+		}
+
 		wdt_reset();
 		All_Axis.F_x_accel = All_axis_kalman_filter(&X_Axis, (float)All_Axis_ROW.Xaccel_raw, (float)All_Axis_ROW.Xgyro_raw, 0.0053f);
 		All_Axis.F_y_accel = All_axis_kalman_filter(&Y_Axis, (float)All_Axis_ROW.Yaccel_raw, (float)All_Axis_ROW.Ygyro_raw, 0.0053f);
@@ -316,8 +334,8 @@ void arduino_ploter(void)
 	
 	//====!!!!!!!!!!!====cod to display in arduino ide monitor=====!!!!!!!!!=======
 	//%.2f
-	UART_Transmit_String("angle_y:, filter_y \r\n");
-	UART_PrintLn("%d,%d", (int16_t)Ploter_angle, (int16_t)Y_angle);
+// 	UART_Transmit_String("angle_y:, filter_y \r\n");
+// 	UART_PrintLn("%d,%d", (int16_t)Ploter_angle, (int16_t)Y_angle);
 }
 
 void UART_data_procesing(void)
@@ -470,6 +488,20 @@ ISR(TIMER0_OVF_vect) {
 ISR(TIMER2_COMP_vect) {
 	// Код, який виконується кожну 1 мс
 	wdt_reset();
+	//>> One sec counting & MPU_6050 data receive ERRORs handlind << BEGIN
+	if(one_sec_counter < 1000){
+		one_sec_counter ++;
+	} else {
+		if (ERROR_status_counter > 0){
+			if (ERROR_status_counter == 1){
+				re_init_flag = 1;
+			}
+			ERROR_status_counter --;
+		}
+		one_sec_counter = 0;
+	}
+	//>> One sec counting & MPU_6050 data receive ERRORs handlind << END
+	
 	if (UART_TX_Pre_Counter == 1)
 	{
 		UART_TX_Pre_Counter = 0;
@@ -496,7 +528,9 @@ ISR(TIMER2_COMP_vect) {
 	}
 	else
 	{
-		if(LED_Elive_Counter == 1){ RX_ON; }
+		if(LED_Elive_Counter == 1){ 
+			RX_ON;
+		}
 		if (LED_Elive_Counter == 0)
 		{
 			LED_Elive_Counter = 200;

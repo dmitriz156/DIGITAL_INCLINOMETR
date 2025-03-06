@@ -183,6 +183,8 @@
 #define _MPU_AXIS_ALL_REG_LEGTH 6 /* All Axis Registers */
 #define _MPU_RAD_TO_DEG         57.2957786f /* Value for convert */
 #define _MPU_TRIALS             5 /* Number of i2c trials */
+#define _MPU_OK                 0
+#define _MPU_ERROR              1
 
 #define _MATH_PI 3.1415926535897932384626433832795f /* pi value */
 
