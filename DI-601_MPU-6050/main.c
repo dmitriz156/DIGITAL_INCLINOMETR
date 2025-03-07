@@ -87,6 +87,7 @@ volatile uint8_t tx_buffer[DATA_PACKAGE_SIZE];
 
 uint8_t MPU_status_A = _MPU_OK;
 uint8_t MPU_status_G = _MPU_OK;
+
 bool re_init_flag = 0;
 uint8_t ERROR_status_counter = 0;
 uint16_t one_sec_counter = 0;
