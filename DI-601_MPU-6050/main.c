@@ -48,6 +48,7 @@ kalman_t        Z_Axis       = {0};
 volatile float X_angle = 0;
 volatile float Y_angle = 0;
 volatile float Z_angle = 0;
+volatile float Calc_Y_angle = 0;
 float Ploter_angle = 0;
 float Prev_Y_angle = 0;
 
@@ -193,7 +194,7 @@ int main(void)
 		#ifdef DEBUG_MOD
 		Ploter_angle = ( _MPU_RAD_TO_DEG * ( atan2( -All_Axis_ROW.Xaccel_raw , -All_Axis_ROW.Zaccel_raw ) + _MATH_PI ) );
 		#endif
-		Y_angle = ( _MPU_RAD_TO_DEG * ( atan2( -All_Axis.F_x_accel , -All_Axis.F_z_accel ) + _MATH_PI ) );
+		Calc_Y_angle = ( _MPU_RAD_TO_DEG * ( atan2( -All_Axis.F_x_accel , -All_Axis.F_z_accel ) + _MATH_PI ) );
 		//if (Lutch == 0) 
 // 		All_Axis.x_accel = ( _MPU_RAD_TO_DEG * ( atan2( -All_Axis_ROW.Yaccel_raw , -All_Axis_ROW.Zaccel_raw ) + _MATH_PI ) );
 //		...
@@ -213,13 +214,14 @@ int main(void)
 		//Ploter_angle = Y_angle;
 		
 	//====================================Output depending on the type BEGIN======================================
+		
 		if (Angle_Type == RB_DATA_TYPE){
-			Y_angle -= 90.0f;
+			Calc_Y_angle -= 90.0f;
 		}
-		if (Y_angle <= 180.0f){
-			Y_angle = Y_angle;
+		if (Calc_Y_angle <= 180.0f){
+			Y_angle = Calc_Y_angle;
 		}else{
-			Y_angle = Y_angle - 360.0f;
+			Y_angle = Calc_Y_angle - 360.0f;
 		}
 		
 		bool temp_flag = 0;

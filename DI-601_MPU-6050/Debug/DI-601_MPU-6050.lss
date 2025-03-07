@@ -7,7 +7,7 @@ Idx Name          Size      VMA       LMA       File off  Algn
                   CONTENTS, ALLOC, LOAD, READONLY, CODE
   1 .data         00000002  00800060  00001a48  00001adc  2**0
                   CONTENTS, ALLOC, LOAD, DATA
-  2 .bss          000000f7  00800062  00800062  00001ade  2**0
+  2 .bss          000000fb  00800062  00800062  00001ade  2**0
                   ALLOC
   3 .comment      00000030  00000000  00000000  00001ade  2**0
                   CONTENTS, READONLY
@@ -15,19 +15,19 @@ Idx Name          Size      VMA       LMA       File off  Algn
                   CONTENTS, READONLY
   5 .debug_aranges 000002d8  00000000  00000000  00001b50  2**3
                   CONTENTS, READONLY, DEBUGGING
-  6 .debug_info   00004323  00000000  00000000  00001e28  2**0
+  6 .debug_info   00004335  00000000  00000000  00001e28  2**0
                   CONTENTS, READONLY, DEBUGGING
-  7 .debug_abbrev 00000cd1  00000000  00000000  0000614b  2**0
+  7 .debug_abbrev 00000cd1  00000000  00000000  0000615d  2**0
                   CONTENTS, READONLY, DEBUGGING
-  8 .debug_line   00001d8a  00000000  00000000  00006e1c  2**0
+  8 .debug_line   00001d8a  00000000  00000000  00006e2e  2**0
                   CONTENTS, READONLY, DEBUGGING
-  9 .debug_frame  00000e18  00000000  00000000  00008ba8  2**2
+  9 .debug_frame  00000e18  00000000  00000000  00008bb8  2**2
                   CONTENTS, READONLY, DEBUGGING
- 10 .debug_str    00001ba2  00000000  00000000  000099c0  2**0
+ 10 .debug_str    00001baf  00000000  00000000  000099d0  2**0
                   CONTENTS, READONLY, DEBUGGING
- 11 .debug_loc    00004926  00000000  00000000  0000b562  2**0
+ 11 .debug_loc    00004926  00000000  00000000  0000b57f  2**0
                   CONTENTS, READONLY, DEBUGGING
- 12 .debug_ranges 000002a8  00000000  00000000  0000fe88  2**0
+ 12 .debug_ranges 000002a8  00000000  00000000  0000fea5  2**0
                   CONTENTS, READONLY, DEBUGGING
 
 Disassembly of section .text:
@@ -107,7 +107,7 @@ Disassembly of section .text:
       7e:	1d 92       	st	X+, r1
 
 00000080 <.do_clear_bss_start>:
-      80:	a9 35       	cpi	r26, 0x59	; 89
+      80:	ad 35       	cpi	r26, 0x5D	; 93
       82:	b2 07       	cpc	r27, r18
       84:	e1 f7       	brne	.-8      	; 0x7e <.do_clear_bss_loop>
       86:	4b d6       	rcall	.+3222   	; 0xd1e <main>
@@ -1582,14 +1582,14 @@ void UART_data_procesing(void)
 		}
 		
 		if ( (rx_buffer[0] == Old_Data_Addres) && (crc(rx_buffer, OLD_DATA_PACKAGE_SIZE-1) == rx_buffer[4]))
-     872:	80 91 1b 01 	lds	r24, 0x011B	; 0x80011b <rx_buffer>
+     872:	80 91 1f 01 	lds	r24, 0x011F	; 0x80011f <rx_buffer>
      876:	c8 13       	cpse	r28, r24
      878:	18 c1       	rjmp	.+560    	; 0xaaa <UART_data_procesing+0x26a>
      87a:	64 e0       	ldi	r22, 0x04	; 4
-     87c:	8b e1       	ldi	r24, 0x1B	; 27
+     87c:	8f e1       	ldi	r24, 0x1F	; 31
      87e:	91 e0       	ldi	r25, 0x01	; 1
      880:	c4 df       	rcall	.-120    	; 0x80a <crc>
-     882:	90 91 1f 01 	lds	r25, 0x011F	; 0x80011f <rx_buffer+0x4>
+     882:	90 91 23 01 	lds	r25, 0x0123	; 0x800123 <rx_buffer+0x4>
      886:	89 13       	cpse	r24, r25
      888:	10 c1       	rjmp	.+544    	; 0xaaa <UART_data_procesing+0x26a>
 		{
@@ -1606,7 +1606,7 @@ void UART_data_procesing(void)
      89c:	93 98       	cbi	0x12, 3	; 18
 			memset(rx_buffer, 0, DATA_PACKAGE_SIZE);
      89e:	87 e0       	ldi	r24, 0x07	; 7
-     8a0:	eb e1       	ldi	r30, 0x1B	; 27
+     8a0:	ef e1       	ldi	r30, 0x1F	; 31
      8a2:	f1 e0       	ldi	r31, 0x01	; 1
      8a4:	df 01       	movw	r26, r30
      8a6:	98 2f       	mov	r25, r24
@@ -1614,7 +1614,7 @@ void UART_data_procesing(void)
      8aa:	9a 95       	dec	r25
      8ac:	e9 f7       	brne	.-6      	; 0x8a8 <UART_data_procesing+0x68>
 			memset(tx_buffer, 0, DATA_PACKAGE_SIZE);
-     8ae:	02 e2       	ldi	r16, 0x22	; 34
+     8ae:	06 e2       	ldi	r16, 0x26	; 38
      8b0:	11 e0       	ldi	r17, 0x01	; 1
      8b2:	d8 01       	movw	r26, r16
      8b4:	1d 92       	st	X+, r1
@@ -1625,8 +1625,8 @@ void UART_data_procesing(void)
      8bc:	c0 83       	st	Z, r28
 
 			tx_buffer[1] = (Angle_OLD >> 8) & 0xFF;//MSB
-     8be:	80 91 32 01 	lds	r24, 0x0132	; 0x800132 <Angle_OLD>
-     8c2:	90 91 33 01 	lds	r25, 0x0133	; 0x800133 <Angle_OLD+0x1>
+     8be:	80 91 36 01 	lds	r24, 0x0136	; 0x800136 <Angle_OLD>
+     8c2:	90 91 37 01 	lds	r25, 0x0137	; 0x800137 <Angle_OLD+0x1>
      8c6:	91 83       	std	Z+1, r25	; 0x01
 			tx_buffer[2] = Angle_OLD & 0xFF;//LSB
      8c8:	82 83       	std	Z+2, r24	; 0x02
@@ -1651,15 +1651,15 @@ void UART_data_procesing(void)
 	}
 
 	if ( (rx_buffer[0] == Sensor_Addres) && (crc(rx_buffer, DATA_PACKAGE_SIZE-1) == rx_buffer[6]))
-     8e0:	90 91 1b 01 	lds	r25, 0x011B	; 0x80011b <rx_buffer>
+     8e0:	90 91 1f 01 	lds	r25, 0x011F	; 0x80011f <rx_buffer>
      8e4:	80 91 63 00 	lds	r24, 0x0063	; 0x800063 <Sensor_Addres>
      8e8:	98 13       	cpse	r25, r24
      8ea:	df c0       	rjmp	.+446    	; 0xaaa <UART_data_procesing+0x26a>
      8ec:	66 e0       	ldi	r22, 0x06	; 6
-     8ee:	8b e1       	ldi	r24, 0x1B	; 27
+     8ee:	8f e1       	ldi	r24, 0x1F	; 31
      8f0:	91 e0       	ldi	r25, 0x01	; 1
      8f2:	8b df       	rcall	.-234    	; 0x80a <crc>
-     8f4:	90 91 21 01 	lds	r25, 0x0121	; 0x800121 <rx_buffer+0x6>
+     8f4:	90 91 25 01 	lds	r25, 0x0125	; 0x800125 <rx_buffer+0x6>
      8f8:	89 13       	cpse	r24, r25
      8fa:	d7 c0       	rjmp	.+430    	; 0xaaa <UART_data_procesing+0x26a>
 	{
@@ -1675,7 +1675,7 @@ void UART_data_procesing(void)
      90c:	80 ff       	sbrs	r24, 0
      90e:	93 98       	cbi	0x12, 3	; 18
 		Angle_Type = rx_buffer[2];
-     910:	eb e1       	ldi	r30, 0x1B	; 27
+     910:	ef e1       	ldi	r30, 0x1F	; 31
      912:	f1 e0       	ldi	r31, 0x01	; 1
      914:	82 81       	ldd	r24, Z+2	; 0x02
      916:	80 93 64 00 	sts	0x0064, r24	; 0x800064 <Angle_Type>
@@ -1700,15 +1700,15 @@ void UART_data_procesing(void)
      938:	8a 30       	cpi	r24, 0x0A	; 10
      93a:	f9 f4       	brne	.+62     	; 0x97a <UART_data_procesing+0x13a>
 				if (rx_buffer[4] <= ANGLE_SENS_ADDRESS_4 && rx_buffer[4] != 0)
-     93c:	80 91 1f 01 	lds	r24, 0x011F	; 0x80011f <rx_buffer+0x4>
+     93c:	80 91 23 01 	lds	r24, 0x0123	; 0x800123 <rx_buffer+0x4>
      940:	85 30       	cpi	r24, 0x05	; 5
      942:	70 f4       	brcc	.+28     	; 0x960 <UART_data_procesing+0x120>
-     944:	80 91 1f 01 	lds	r24, 0x011F	; 0x80011f <rx_buffer+0x4>
+     944:	80 91 23 01 	lds	r24, 0x0123	; 0x800123 <rx_buffer+0x4>
      948:	88 23       	and	r24, r24
      94a:	51 f0       	breq	.+20     	; 0x960 <UART_data_procesing+0x120>
 				{
 					Sensor_Addres = rx_buffer[4];
-     94c:	80 91 1f 01 	lds	r24, 0x011F	; 0x80011f <rx_buffer+0x4>
+     94c:	80 91 23 01 	lds	r24, 0x0123	; 0x800123 <rx_buffer+0x4>
      950:	80 93 63 00 	sts	0x0063, r24	; 0x800063 <Sensor_Addres>
 					eeprom_write_byte((uint8_t*)EEPROM_SENS_ADDR, Sensor_Addres);
      954:	60 91 63 00 	lds	r22, 0x0063	; 0x800063 <Sensor_Addres>
@@ -1738,7 +1738,7 @@ void UART_data_procesing(void)
 		}
 			
 		if (rx_buffer[3] == POSITION_CHANGE_KEY)
-     97a:	80 91 1e 01 	lds	r24, 0x011E	; 0x80011e <rx_buffer+0x3>
+     97a:	80 91 22 01 	lds	r24, 0x0122	; 0x800122 <rx_buffer+0x3>
      97e:	80 37       	cpi	r24, 0x70	; 112
      980:	19 f5       	brne	.+70     	; 0x9c8 <UART_data_procesing+0x188>
 		{
@@ -1788,7 +1788,7 @@ void UART_data_procesing(void)
 		}
 		memset(rx_buffer, 0, DATA_PACKAGE_SIZE);
      9cc:	87 e0       	ldi	r24, 0x07	; 7
-     9ce:	eb e1       	ldi	r30, 0x1B	; 27
+     9ce:	ef e1       	ldi	r30, 0x1F	; 31
      9d0:	f1 e0       	ldi	r31, 0x01	; 1
      9d2:	df 01       	movw	r26, r30
      9d4:	98 2f       	mov	r25, r24
@@ -1797,7 +1797,7 @@ void UART_data_procesing(void)
      9da:	e9 f7       	brne	.-6      	; 0x9d6 <UART_data_procesing+0x196>
 			
 		memset(tx_buffer, 0, DATA_PACKAGE_SIZE);
-     9dc:	e2 e2       	ldi	r30, 0x22	; 34
+     9dc:	e6 e2       	ldi	r30, 0x26	; 38
      9de:	f1 e0       	ldi	r31, 0x01	; 1
      9e0:	df 01       	movw	r26, r30
      9e2:	1d 92       	st	X+, r1
@@ -1815,13 +1815,13 @@ void UART_data_procesing(void)
      9fc:	69 f4       	brne	.+26     	; 0xa18 <UART_data_procesing+0x1d8>
 		{
 			float_to_byte(Y_angle, tx_buffer, 1);
-     9fe:	60 91 7b 00 	lds	r22, 0x007B	; 0x80007b <Y_angle>
-     a02:	70 91 7c 00 	lds	r23, 0x007C	; 0x80007c <Y_angle+0x1>
-     a06:	80 91 7d 00 	lds	r24, 0x007D	; 0x80007d <Y_angle+0x2>
-     a0a:	90 91 7e 00 	lds	r25, 0x007E	; 0x80007e <Y_angle+0x3>
+     9fe:	60 91 7f 00 	lds	r22, 0x007F	; 0x80007f <Y_angle>
+     a02:	70 91 80 00 	lds	r23, 0x0080	; 0x800080 <Y_angle+0x1>
+     a06:	80 91 81 00 	lds	r24, 0x0081	; 0x800081 <Y_angle+0x2>
+     a0a:	90 91 82 00 	lds	r25, 0x0082	; 0x800082 <Y_angle+0x3>
      a0e:	21 e0       	ldi	r18, 0x01	; 1
      a10:	30 e0       	ldi	r19, 0x00	; 0
-     a12:	42 e2       	ldi	r20, 0x22	; 34
+     a12:	46 e2       	ldi	r20, 0x26	; 38
      a14:	51 e0       	ldi	r21, 0x01	; 1
      a16:	81 dd       	rcall	.-1278   	; 0x51a <float_to_byte>
 		}
@@ -1854,7 +1854,7 @@ void UART_data_procesing(void)
      a50:	2c f4       	brge	.+10     	; 0xa5c <UART_data_procesing+0x21c>
 			{
 				tx_buffer[1] = (MAX_Accel_Value_X >> 8) & 0xFF;//MSB
-     a52:	e2 e2       	ldi	r30, 0x22	; 34
+     a52:	e6 e2       	ldi	r30, 0x26	; 38
      a54:	f1 e0       	ldi	r31, 0x01	; 1
      a56:	71 83       	std	Z+1, r23	; 0x01
 				tx_buffer[2] = MAX_Accel_Value_X & 0xFF;//LSB
@@ -1864,7 +1864,7 @@ void UART_data_procesing(void)
 			else
 			{
 				tx_buffer[1] = (MAX_Accel_Value_Z >> 8) & 0xFF;//MSB
-     a5c:	e2 e2       	ldi	r30, 0x22	; 34
+     a5c:	e6 e2       	ldi	r30, 0x26	; 38
      a5e:	f1 e0       	ldi	r31, 0x01	; 1
      a60:	51 83       	std	Z+1, r21	; 0x01
 				tx_buffer[2] = MAX_Accel_Value_Z & 0xFF;//LSB
@@ -1874,7 +1874,7 @@ void UART_data_procesing(void)
 			tx_buffer[3] = (MAX_Accel_Value_Y >> 8) & 0xFF;
      a64:	80 91 73 00 	lds	r24, 0x0073	; 0x800073 <MAX_Accel_Value_Y>
      a68:	90 91 74 00 	lds	r25, 0x0074	; 0x800074 <MAX_Accel_Value_Y+0x1>
-     a6c:	e2 e2       	ldi	r30, 0x22	; 34
+     a6c:	e6 e2       	ldi	r30, 0x26	; 38
      a6e:	f1 e0       	ldi	r31, 0x01	; 1
      a70:	93 83       	std	Z+3, r25	; 0x03
 			tx_buffer[4] = MAX_Accel_Value_Y & 0xFF;
@@ -1895,7 +1895,7 @@ void UART_data_procesing(void)
 		}
 		tx_buffer[5] = Sensor_Addres;
      a90:	80 91 63 00 	lds	r24, 0x0063	; 0x800063 <Sensor_Addres>
-     a94:	c2 e2       	ldi	r28, 0x22	; 34
+     a94:	c6 e2       	ldi	r28, 0x26	; 38
      a96:	d1 e0       	ldi	r29, 0x01	; 1
      a98:	8d 83       	std	Y+5, r24	; 0x05
 		tx_buffer[6] = crc(tx_buffer, DATA_PACKAGE_SIZE-1);           //обрахувати контрольну суму і вислати останнім байтом
@@ -1938,7 +1938,7 @@ ISR(TIMER0_OVF_vect) {
      ac4:	80 91 65 00 	lds	r24, 0x0065	; 0x800065 <UART_Idle_Line_Counter>
      ac8:	81 30       	cpi	r24, 0x01	; 1
      aca:	49 f4       	brne	.+18     	; 0xade <__vector_9+0x2a>
-     acc:	80 91 29 01 	lds	r24, 0x0129	; 0x800129 <rx_counter>
+     acc:	80 91 2d 01 	lds	r24, 0x012D	; 0x80012d <rx_counter>
      ad0:	85 30       	cpi	r24, 0x05	; 5
      ad2:	29 f4       	brne	.+10     	; 0xade <__vector_9+0x2a>
 	{
@@ -2040,14 +2040,14 @@ ISR(TIMER2_COMP_vect) {
      b6e:	88 23       	and	r24, r24
      b70:	21 f0       	breq	.+8      	; 0xb7a <__vector_3+0x7e>
      b72:	84 e0       	ldi	r24, 0x04	; 4
-     b74:	80 93 1a 01 	sts	0x011A, r24	; 0x80011a <tx_counter>
+     b74:	80 93 1e 01 	sts	0x011E, r24	; 0x80011e <tx_counter>
      b78:	03 c0       	rjmp	.+6      	; 0xb80 <__vector_3+0x84>
 		else tx_counter = (DATA_PACKAGE_SIZE-1);
      b7a:	86 e0       	ldi	r24, 0x06	; 6
-     b7c:	80 93 1a 01 	sts	0x011A, r24	; 0x80011a <tx_counter>
+     b7c:	80 93 1e 01 	sts	0x011E, r24	; 0x80011e <tx_counter>
 		//Передавання пакету данних
 		UDR = tx_buffer[0];
-     b80:	80 91 22 01 	lds	r24, 0x0122	; 0x800122 <tx_buffer>
+     b80:	80 91 26 01 	lds	r24, 0x0126	; 0x800126 <tx_buffer>
      b84:	8c b9       	out	0x0c, r24	; 12
 	}
 	
@@ -2150,13 +2150,13 @@ ISR(USART_RXC_vect)
      c1e:	0c c0       	rjmp	.+24     	; 0xc38 <__vector_11+0x2e>
 	{
 		rx_counter = 0;
-     c20:	10 92 29 01 	sts	0x0129, r1	; 0x800129 <rx_counter>
+     c20:	10 92 2d 01 	sts	0x012D, r1	; 0x80012d <rx_counter>
 		Old_Data_Flag = 0;
      c24:	10 92 69 00 	sts	0x0069, r1	; 0x800069 <Old_Data_Flag>
 	}
 	rx_buffer [rx_counter] = UDR;
      c28:	8c b1       	in	r24, 0x0c	; 12
-     c2a:	80 93 1b 01 	sts	0x011B, r24	; 0x80011b <rx_buffer>
+     c2a:	80 93 1f 01 	sts	0x011F, r24	; 0x80011f <rx_buffer>
 	UART_Idle_Line_Counter = 13;
      c2e:	8d e0       	ldi	r24, 0x0D	; 13
      c30:	80 93 65 00 	sts	0x0065, r24	; 0x800065 <UART_Idle_Line_Counter>
@@ -2168,11 +2168,11 @@ ISR(USART_RXC_vect)
 	rx_buffer [rx_counter] = UDR;
      c34:	80 e0       	ldi	r24, 0x00	; 0
      c36:	0d c0       	rjmp	.+26     	; 0xc52 <__vector_11+0x48>
-     c38:	80 91 29 01 	lds	r24, 0x0129	; 0x800129 <rx_counter>
+     c38:	80 91 2d 01 	lds	r24, 0x012D	; 0x80012d <rx_counter>
      c3c:	e8 2f       	mov	r30, r24
      c3e:	f0 e0       	ldi	r31, 0x00	; 0
      c40:	9c b1       	in	r25, 0x0c	; 12
-     c42:	e5 5e       	subi	r30, 0xE5	; 229
+     c42:	e1 5e       	subi	r30, 0xE1	; 225
      c44:	fe 4f       	sbci	r31, 0xFE	; 254
      c46:	90 83       	st	Z, r25
 	UART_Idle_Line_Counter = 13;
@@ -2184,7 +2184,7 @@ ISR(USART_RXC_vect)
      c50:	20 f4       	brcc	.+8      	; 0xc5a <__vector_11+0x50>
 		rx_counter ++;
      c52:	8f 5f       	subi	r24, 0xFF	; 255
-     c54:	80 93 29 01 	sts	0x0129, r24	; 0x800129 <rx_counter>
+     c54:	80 93 2d 01 	sts	0x012D, r24	; 0x80012d <rx_counter>
      c58:	07 c0       	rjmp	.+14     	; 0xc68 <__vector_11+0x5e>
 	}
 	else
@@ -2222,13 +2222,13 @@ ISR(USART_TXC_vect)
      c86:	ef 93       	push	r30
      c88:	ff 93       	push	r31
 	if (tx_counter > 0)
-     c8a:	80 91 1a 01 	lds	r24, 0x011A	; 0x80011a <tx_counter>
+     c8a:	80 91 1e 01 	lds	r24, 0x011E	; 0x80011e <tx_counter>
      c8e:	88 23       	and	r24, r24
      c90:	f1 f0       	breq	.+60     	; 0xcce <__vector_13+0x54>
 	{
 		tx_counter--;
      c92:	81 50       	subi	r24, 0x01	; 1
-     c94:	80 93 1a 01 	sts	0x011A, r24	; 0x80011a <tx_counter>
+     c94:	80 93 1e 01 	sts	0x011E, r24	; 0x80011e <tx_counter>
 		UCSRB &= ~(1 << TXB8);       //Скинули 9-й біт
      c98:	50 98       	cbi	0x0a, 0	; 10
 		
@@ -2237,24 +2237,24 @@ ISR(USART_TXC_vect)
      c9e:	88 23       	and	r24, r24
      ca0:	59 f0       	breq	.+22     	; 0xcb8 <__vector_13+0x3e>
 			UDR = tx_buffer[(OLD_DATA_PACKAGE_SIZE-1) - tx_counter];
-     ca2:	80 91 1a 01 	lds	r24, 0x011A	; 0x80011a <tx_counter>
+     ca2:	80 91 1e 01 	lds	r24, 0x011E	; 0x80011e <tx_counter>
      ca6:	e4 e0       	ldi	r30, 0x04	; 4
      ca8:	f0 e0       	ldi	r31, 0x00	; 0
      caa:	e8 1b       	sub	r30, r24
      cac:	f1 09       	sbc	r31, r1
-     cae:	ee 5d       	subi	r30, 0xDE	; 222
+     cae:	ea 5d       	subi	r30, 0xDA	; 218
      cb0:	fe 4f       	sbci	r31, 0xFE	; 254
      cb2:	80 81       	ld	r24, Z
      cb4:	8c b9       	out	0x0c, r24	; 12
      cb6:	10 c0       	rjmp	.+32     	; 0xcd8 <__vector_13+0x5e>
 		} else {
 			UDR = tx_buffer[(DATA_PACKAGE_SIZE-1) - tx_counter];
-     cb8:	80 91 1a 01 	lds	r24, 0x011A	; 0x80011a <tx_counter>
+     cb8:	80 91 1e 01 	lds	r24, 0x011E	; 0x80011e <tx_counter>
      cbc:	e6 e0       	ldi	r30, 0x06	; 6
      cbe:	f0 e0       	ldi	r31, 0x00	; 0
      cc0:	e8 1b       	sub	r30, r24
      cc2:	f1 09       	sbc	r31, r1
-     cc4:	ee 5d       	subi	r30, 0xDE	; 222
+     cc4:	ea 5d       	subi	r30, 0xDA	; 218
      cc6:	fe 4f       	sbci	r31, 0xFE	; 254
      cc8:	80 81       	ld	r24, Z
      cca:	8c b9       	out	0x0c, r24	; 12
@@ -2467,14 +2467,14 @@ void wdt_enable (const uint8_t value)
 		MPU_status_A = MPU6050_GetRawAccel(&All_Axis_ROW.Xaccel_raw, 20);
      dba:	64 e1       	ldi	r22, 0x14	; 20
      dbc:	70 e0       	ldi	r23, 0x00	; 0
-     dbe:	8b ee       	ldi	r24, 0xEB	; 235
+     dbe:	8f ee       	ldi	r24, 0xEF	; 239
      dc0:	90 e0       	ldi	r25, 0x00	; 0
      dc2:	1d d3       	rcall	.+1594   	; 0x13fe <MPU6050_GetRawAccel>
      dc4:	80 93 61 00 	sts	0x0061, r24	; 0x800061 <MPU_status_A>
 		MPU_status_G = MPU6050_GetRawGyro(&All_Axis_ROW.Xgyro_raw, 20);
      dc8:	64 e1       	ldi	r22, 0x14	; 20
      dca:	70 e0       	ldi	r23, 0x00	; 0
-     dcc:	81 ef       	ldi	r24, 0xF1	; 241
+     dcc:	85 ef       	ldi	r24, 0xF5	; 245
      dce:	90 e0       	ldi	r25, 0x00	; 0
      dd0:	49 d3       	rcall	.+1682   	; 0x1464 <MPU6050_GetRawGyro>
      dd2:	80 93 60 00 	sts	0x0060, r24	; 0x800060 <__DATA_REGION_ORIGIN__>
@@ -2507,7 +2507,7 @@ void wdt_enable (const uint8_t value)
 		wdt_reset();
      e04:	a8 95       	wdr
 		All_Axis.F_x_accel = All_axis_kalman_filter(&X_Axis, (float)All_Axis_ROW.Xaccel_raw, (float)All_Axis_ROW.Xgyro_raw, 0.0053f);
-     e06:	cb ee       	ldi	r28, 0xEB	; 235
+     e06:	cf ee       	ldi	r28, 0xEF	; 239
      e08:	d0 e0       	ldi	r29, 0x00	; 0
      e0a:	6e 81       	ldd	r22, Y+6	; 0x06
      e0c:	7f 81       	ldd	r23, Y+7	; 0x07
@@ -2539,10 +2539,10 @@ void wdt_enable (const uint8_t value)
      e40:	f0 2d       	mov	r31, r0
      e42:	93 01       	movw	r18, r6
      e44:	82 01       	movw	r16, r4
-     e46:	8f ea       	ldi	r24, 0xAF	; 175
+     e46:	83 eb       	ldi	r24, 0xB3	; 179
      e48:	90 e0       	ldi	r25, 0x00	; 0
      e4a:	85 db       	rcall	.-2294   	; 0x556 <All_axis_kalman_filter>
-     e4c:	e7 ec       	ldi	r30, 0xC7	; 199
+     e4c:	eb ec       	ldi	r30, 0xCB	; 203
      e4e:	f0 e0       	ldi	r31, 0x00	; 0
      e50:	60 83       	st	Z, r22
      e52:	71 83       	std	Z+1, r23	; 0x01
@@ -2569,13 +2569,13 @@ void wdt_enable (const uint8_t value)
      e7a:	bc 01       	movw	r22, r24
      e7c:	93 01       	movw	r18, r6
      e7e:	82 01       	movw	r16, r4
-     e80:	87 e9       	ldi	r24, 0x97	; 151
+     e80:	8b e9       	ldi	r24, 0x9B	; 155
      e82:	90 e0       	ldi	r25, 0x00	; 0
      e84:	68 db       	rcall	.-2352   	; 0x556 <All_axis_kalman_filter>
-     e86:	60 93 cb 00 	sts	0x00CB, r22	; 0x8000cb <All_Axis+0x4>
-     e8a:	70 93 cc 00 	sts	0x00CC, r23	; 0x8000cc <All_Axis+0x5>
-     e8e:	80 93 cd 00 	sts	0x00CD, r24	; 0x8000cd <All_Axis+0x6>
-     e92:	90 93 ce 00 	sts	0x00CE, r25	; 0x8000ce <All_Axis+0x7>
+     e86:	60 93 cf 00 	sts	0x00CF, r22	; 0x8000cf <All_Axis+0x4>
+     e8a:	70 93 d0 00 	sts	0x00D0, r23	; 0x8000d0 <All_Axis+0x5>
+     e8e:	80 93 d1 00 	sts	0x00D1, r24	; 0x8000d1 <All_Axis+0x6>
+     e92:	90 93 d2 00 	sts	0x00D2, r25	; 0x8000d2 <All_Axis+0x7>
 		All_Axis.F_z_accel = All_axis_kalman_filter(&Z_Axis, (float)All_Axis_ROW.Zaccel_raw, (float)All_Axis_ROW.Zgyro_raw, 0.0053f);
      e96:	6a 85       	ldd	r22, Y+10	; 0x0a
      e98:	7b 85       	ldd	r23, Y+11	; 0x0b
@@ -2597,21 +2597,21 @@ void wdt_enable (const uint8_t value)
      eb8:	bc 01       	movw	r22, r24
      eba:	93 01       	movw	r18, r6
      ebc:	82 01       	movw	r16, r4
-     ebe:	8f e7       	ldi	r24, 0x7F	; 127
+     ebe:	83 e8       	ldi	r24, 0x83	; 131
      ec0:	90 e0       	ldi	r25, 0x00	; 0
      ec2:	49 db       	rcall	.-2414   	; 0x556 <All_axis_kalman_filter>
      ec4:	6b 01       	movw	r12, r22
      ec6:	7c 01       	movw	r14, r24
-     ec8:	60 93 cf 00 	sts	0x00CF, r22	; 0x8000cf <All_Axis+0x8>
-     ecc:	70 93 d0 00 	sts	0x00D0, r23	; 0x8000d0 <All_Axis+0x9>
-     ed0:	80 93 d1 00 	sts	0x00D1, r24	; 0x8000d1 <All_Axis+0xa>
-     ed4:	90 93 d2 00 	sts	0x00D2, r25	; 0x8000d2 <All_Axis+0xb>
+     ec8:	60 93 d3 00 	sts	0x00D3, r22	; 0x8000d3 <All_Axis+0x8>
+     ecc:	70 93 d4 00 	sts	0x00D4, r23	; 0x8000d4 <All_Axis+0x9>
+     ed0:	80 93 d5 00 	sts	0x00D5, r24	; 0x8000d5 <All_Axis+0xa>
+     ed4:	90 93 d6 00 	sts	0x00D6, r25	; 0x8000d6 <All_Axis+0xb>
 		
 		#ifdef DEBUG_MOD
 		Ploter_angle = ( _MPU_RAD_TO_DEG * ( atan2( -All_Axis_ROW.Xaccel_raw , -All_Axis_ROW.Zaccel_raw ) + _MATH_PI ) );
 		#endif
-		Y_angle = ( _MPU_RAD_TO_DEG * ( atan2( -All_Axis.F_x_accel , -All_Axis.F_z_accel ) + _MATH_PI ) );
-     ed8:	e7 ec       	ldi	r30, 0xC7	; 199
+		Calc_Y_angle = ( _MPU_RAD_TO_DEG * ( atan2( -All_Axis.F_x_accel , -All_Axis.F_z_accel ) + _MATH_PI ) );
+     ed8:	eb ec       	ldi	r30, 0xCB	; 203
      eda:	f0 e0       	ldi	r31, 0x00	; 0
      edc:	80 80       	ld	r8, Z
      ede:	91 80       	ldd	r9, Z+1	; 0x01
@@ -2639,39 +2639,39 @@ void wdt_enable (const uint8_t value)
      f0a:	45 e6       	ldi	r20, 0x65	; 101
      f0c:	52 e4       	ldi	r21, 0x42	; 66
      f0e:	1f d5       	rcall	.+2622   	; 0x194e <__mulsf3>
-     f10:	60 93 7b 00 	sts	0x007B, r22	; 0x80007b <Y_angle>
-     f14:	70 93 7c 00 	sts	0x007C, r23	; 0x80007c <Y_angle+0x1>
-     f18:	80 93 7d 00 	sts	0x007D, r24	; 0x80007d <Y_angle+0x2>
-     f1c:	90 93 7e 00 	sts	0x007E, r25	; 0x80007e <Y_angle+0x3>
-
+     f10:	60 93 7b 00 	sts	0x007B, r22	; 0x80007b <Calc_Y_angle>
+     f14:	70 93 7c 00 	sts	0x007C, r23	; 0x80007c <Calc_Y_angle+0x1>
+     f18:	80 93 7d 00 	sts	0x007D, r24	; 0x80007d <Calc_Y_angle+0x2>
+     f1c:	90 93 7e 00 	sts	0x007E, r25	; 0x80007e <Calc_Y_angle+0x3>
 		//Y_angle = kalman_filter(All_Axis.y_accel, All_Axis.y_gyro, 0.0053f); //5.3 ms
 		//Ploter_angle = Y_angle;
 		
 	//====================================Output depending on the type BEGIN======================================
+		
 		if (Angle_Type == RB_DATA_TYPE){
      f20:	80 91 64 00 	lds	r24, 0x0064	; 0x800064 <Angle_Type>
      f24:	8a 3f       	cpi	r24, 0xFA	; 250
      f26:	a9 f4       	brne	.+42     	; 0xf52 <main+0x234>
-			Y_angle -= 90.0f;
-     f28:	60 91 7b 00 	lds	r22, 0x007B	; 0x80007b <Y_angle>
-     f2c:	70 91 7c 00 	lds	r23, 0x007C	; 0x80007c <Y_angle+0x1>
-     f30:	80 91 7d 00 	lds	r24, 0x007D	; 0x80007d <Y_angle+0x2>
-     f34:	90 91 7e 00 	lds	r25, 0x007E	; 0x80007e <Y_angle+0x3>
+			Calc_Y_angle -= 90.0f;
+     f28:	60 91 7b 00 	lds	r22, 0x007B	; 0x80007b <Calc_Y_angle>
+     f2c:	70 91 7c 00 	lds	r23, 0x007C	; 0x80007c <Calc_Y_angle+0x1>
+     f30:	80 91 7d 00 	lds	r24, 0x007D	; 0x80007d <Calc_Y_angle+0x2>
+     f34:	90 91 7e 00 	lds	r25, 0x007E	; 0x80007e <Calc_Y_angle+0x3>
      f38:	20 e0       	ldi	r18, 0x00	; 0
      f3a:	30 e0       	ldi	r19, 0x00	; 0
      f3c:	44 eb       	ldi	r20, 0xB4	; 180
      f3e:	52 e4       	ldi	r21, 0x42	; 66
      f40:	c4 d2       	rcall	.+1416   	; 0x14ca <__subsf3>
-     f42:	60 93 7b 00 	sts	0x007B, r22	; 0x80007b <Y_angle>
-     f46:	70 93 7c 00 	sts	0x007C, r23	; 0x80007c <Y_angle+0x1>
-     f4a:	80 93 7d 00 	sts	0x007D, r24	; 0x80007d <Y_angle+0x2>
-     f4e:	90 93 7e 00 	sts	0x007E, r25	; 0x80007e <Y_angle+0x3>
+     f42:	60 93 7b 00 	sts	0x007B, r22	; 0x80007b <Calc_Y_angle>
+     f46:	70 93 7c 00 	sts	0x007C, r23	; 0x80007c <Calc_Y_angle+0x1>
+     f4a:	80 93 7d 00 	sts	0x007D, r24	; 0x80007d <Calc_Y_angle+0x2>
+     f4e:	90 93 7e 00 	sts	0x007E, r25	; 0x80007e <Calc_Y_angle+0x3>
 		}
-		if (Y_angle <= 180.0f){
-     f52:	60 91 7b 00 	lds	r22, 0x007B	; 0x80007b <Y_angle>
-     f56:	70 91 7c 00 	lds	r23, 0x007C	; 0x80007c <Y_angle+0x1>
-     f5a:	80 91 7d 00 	lds	r24, 0x007D	; 0x80007d <Y_angle+0x2>
-     f5e:	90 91 7e 00 	lds	r25, 0x007E	; 0x80007e <Y_angle+0x3>
+		if (Calc_Y_angle <= 180.0f){
+     f52:	60 91 7b 00 	lds	r22, 0x007B	; 0x80007b <Calc_Y_angle>
+     f56:	70 91 7c 00 	lds	r23, 0x007C	; 0x80007c <Calc_Y_angle+0x1>
+     f5a:	80 91 7d 00 	lds	r24, 0x007D	; 0x80007d <Calc_Y_angle+0x2>
+     f5e:	90 91 7e 00 	lds	r25, 0x007E	; 0x80007e <Calc_Y_angle+0x3>
      f62:	20 e0       	ldi	r18, 0x00	; 0
      f64:	30 e0       	ldi	r19, 0x00	; 0
      f66:	44 e3       	ldi	r20, 0x34	; 52
@@ -2679,31 +2679,31 @@ void wdt_enable (const uint8_t value)
      f6a:	76 d3       	rcall	.+1772   	; 0x1658 <__cmpsf2>
      f6c:	18 16       	cp	r1, r24
      f6e:	8c f0       	brlt	.+34     	; 0xf92 <main+0x274>
-			Y_angle = Y_angle;
-     f70:	80 91 7b 00 	lds	r24, 0x007B	; 0x80007b <Y_angle>
-     f74:	90 91 7c 00 	lds	r25, 0x007C	; 0x80007c <Y_angle+0x1>
-     f78:	a0 91 7d 00 	lds	r26, 0x007D	; 0x80007d <Y_angle+0x2>
-     f7c:	b0 91 7e 00 	lds	r27, 0x007E	; 0x80007e <Y_angle+0x3>
-     f80:	80 93 7b 00 	sts	0x007B, r24	; 0x80007b <Y_angle>
-     f84:	90 93 7c 00 	sts	0x007C, r25	; 0x80007c <Y_angle+0x1>
-     f88:	a0 93 7d 00 	sts	0x007D, r26	; 0x80007d <Y_angle+0x2>
-     f8c:	b0 93 7e 00 	sts	0x007E, r27	; 0x80007e <Y_angle+0x3>
+			Y_angle = Calc_Y_angle;
+     f70:	80 91 7b 00 	lds	r24, 0x007B	; 0x80007b <Calc_Y_angle>
+     f74:	90 91 7c 00 	lds	r25, 0x007C	; 0x80007c <Calc_Y_angle+0x1>
+     f78:	a0 91 7d 00 	lds	r26, 0x007D	; 0x80007d <Calc_Y_angle+0x2>
+     f7c:	b0 91 7e 00 	lds	r27, 0x007E	; 0x80007e <Calc_Y_angle+0x3>
+     f80:	80 93 7f 00 	sts	0x007F, r24	; 0x80007f <Y_angle>
+     f84:	90 93 80 00 	sts	0x0080, r25	; 0x800080 <Y_angle+0x1>
+     f88:	a0 93 81 00 	sts	0x0081, r26	; 0x800081 <Y_angle+0x2>
+     f8c:	b0 93 82 00 	sts	0x0082, r27	; 0x800082 <Y_angle+0x3>
      f90:	15 c0       	rjmp	.+42     	; 0xfbc <main+0x29e>
 		}else{
-			Y_angle = Y_angle - 360.0f;
-     f92:	60 91 7b 00 	lds	r22, 0x007B	; 0x80007b <Y_angle>
-     f96:	70 91 7c 00 	lds	r23, 0x007C	; 0x80007c <Y_angle+0x1>
-     f9a:	80 91 7d 00 	lds	r24, 0x007D	; 0x80007d <Y_angle+0x2>
-     f9e:	90 91 7e 00 	lds	r25, 0x007E	; 0x80007e <Y_angle+0x3>
+			Y_angle = Calc_Y_angle - 360.0f;
+     f92:	60 91 7b 00 	lds	r22, 0x007B	; 0x80007b <Calc_Y_angle>
+     f96:	70 91 7c 00 	lds	r23, 0x007C	; 0x80007c <Calc_Y_angle+0x1>
+     f9a:	80 91 7d 00 	lds	r24, 0x007D	; 0x80007d <Calc_Y_angle+0x2>
+     f9e:	90 91 7e 00 	lds	r25, 0x007E	; 0x80007e <Calc_Y_angle+0x3>
      fa2:	20 e0       	ldi	r18, 0x00	; 0
      fa4:	30 e0       	ldi	r19, 0x00	; 0
      fa6:	44 eb       	ldi	r20, 0xB4	; 180
      fa8:	53 e4       	ldi	r21, 0x43	; 67
      faa:	8f d2       	rcall	.+1310   	; 0x14ca <__subsf3>
-     fac:	60 93 7b 00 	sts	0x007B, r22	; 0x80007b <Y_angle>
-     fb0:	70 93 7c 00 	sts	0x007C, r23	; 0x80007c <Y_angle+0x1>
-     fb4:	80 93 7d 00 	sts	0x007D, r24	; 0x80007d <Y_angle+0x2>
-     fb8:	90 93 7e 00 	sts	0x007E, r25	; 0x80007e <Y_angle+0x3>
+     fac:	60 93 7f 00 	sts	0x007F, r22	; 0x80007f <Y_angle>
+     fb0:	70 93 80 00 	sts	0x0080, r23	; 0x800080 <Y_angle+0x1>
+     fb4:	80 93 81 00 	sts	0x0081, r24	; 0x800081 <Y_angle+0x2>
+     fb8:	90 93 82 00 	sts	0x0082, r25	; 0x800082 <Y_angle+0x3>
 		bool temp_flag = 0;
 		#ifdef DEBUG_MOD
 		temp_flag = 1;
@@ -2713,8 +2713,8 @@ void wdt_enable (const uint8_t value)
      fbc:	80 91 64 00 	lds	r24, 0x0064	; 0x800064 <Angle_Type>
 		{
 			if(abs(MAX_Accel_Value_X) < abs(All_Axis_ROW.Xaccel_raw)){
-     fc0:	80 91 eb 00 	lds	r24, 0x00EB	; 0x8000eb <All_Axis_ROW>
-     fc4:	90 91 ec 00 	lds	r25, 0x00EC	; 0x8000ec <All_Axis_ROW+0x1>
+     fc0:	80 91 ef 00 	lds	r24, 0x00EF	; 0x8000ef <All_Axis_ROW>
+     fc4:	90 91 f0 00 	lds	r25, 0x00F0	; 0x8000f0 <All_Axis_ROW+0x1>
      fc8:	20 91 75 00 	lds	r18, 0x0075	; 0x800075 <MAX_Accel_Value_X>
      fcc:	30 91 76 00 	lds	r19, 0x0076	; 0x800076 <MAX_Accel_Value_X+0x1>
      fd0:	33 23       	and	r19, r19
@@ -2737,8 +2737,8 @@ void wdt_enable (const uint8_t value)
      ff2:	80 93 75 00 	sts	0x0075, r24	; 0x800075 <MAX_Accel_Value_X>
 			}
 			if(abs(MAX_Accel_Value_Y) < abs(All_Axis_ROW.Yaccel_raw)){
-     ff6:	80 91 ed 00 	lds	r24, 0x00ED	; 0x8000ed <All_Axis_ROW+0x2>
-     ffa:	90 91 ee 00 	lds	r25, 0x00EE	; 0x8000ee <All_Axis_ROW+0x3>
+     ff6:	80 91 f1 00 	lds	r24, 0x00F1	; 0x8000f1 <All_Axis_ROW+0x2>
+     ffa:	90 91 f2 00 	lds	r25, 0x00F2	; 0x8000f2 <All_Axis_ROW+0x3>
      ffe:	20 91 73 00 	lds	r18, 0x0073	; 0x800073 <MAX_Accel_Value_Y>
     1002:	30 91 74 00 	lds	r19, 0x0074	; 0x800074 <MAX_Accel_Value_Y+0x1>
     1006:	33 23       	and	r19, r19
@@ -2761,8 +2761,8 @@ void wdt_enable (const uint8_t value)
     1028:	80 93 73 00 	sts	0x0073, r24	; 0x800073 <MAX_Accel_Value_Y>
 			}
 			if(abs(MAX_Accel_Value_Z) < abs(All_Axis_ROW.Zaccel_raw)){
-    102c:	80 91 ef 00 	lds	r24, 0x00EF	; 0x8000ef <All_Axis_ROW+0x4>
-    1030:	90 91 f0 00 	lds	r25, 0x00F0	; 0x8000f0 <All_Axis_ROW+0x5>
+    102c:	80 91 f3 00 	lds	r24, 0x00F3	; 0x8000f3 <All_Axis_ROW+0x4>
+    1030:	90 91 f4 00 	lds	r25, 0x00F4	; 0x8000f4 <All_Axis_ROW+0x5>
     1034:	20 91 71 00 	lds	r18, 0x0071	; 0x800071 <MAX_Accel_Value_Z>
     1038:	30 91 72 00 	lds	r19, 0x0072	; 0x800072 <MAX_Accel_Value_Z+0x1>
     103c:	33 23       	and	r19, r19
@@ -2804,8 +2804,8 @@ void wdt_enable (const uint8_t value)
     107c:	56 e4       	ldi	r21, 0x46	; 70
     107e:	67 d4       	rcall	.+2254   	; 0x194e <__mulsf3>
     1080:	57 d3       	rcall	.+1710   	; 0x1730 <__fixsfsi>
-    1082:	70 93 33 01 	sts	0x0133, r23	; 0x800133 <Angle_OLD+0x1>
-    1086:	60 93 32 01 	sts	0x0132, r22	; 0x800132 <Angle_OLD>
+    1082:	70 93 37 01 	sts	0x0137, r23	; 0x800137 <Angle_OLD+0x1>
+    1086:	60 93 36 01 	sts	0x0136, r22	; 0x800136 <Angle_OLD>
     108a:	10 c0       	rjmp	.+32     	; 0x10ac <main+0x38e>
 		} else {
 			//>>Mobile modular SB (N position) X/Z
@@ -2822,15 +2822,15 @@ void wdt_enable (const uint8_t value)
     109e:	56 e4       	ldi	r21, 0x46	; 70
     10a0:	56 d4       	rcall	.+2220   	; 0x194e <__mulsf3>
     10a2:	46 d3       	rcall	.+1676   	; 0x1730 <__fixsfsi>
-    10a4:	70 93 33 01 	sts	0x0133, r23	; 0x800133 <Angle_OLD+0x1>
-    10a8:	60 93 32 01 	sts	0x0132, r22	; 0x800132 <Angle_OLD>
+    10a4:	70 93 37 01 	sts	0x0137, r23	; 0x800137 <Angle_OLD+0x1>
+    10a8:	60 93 36 01 	sts	0x0136, r22	; 0x800136 <Angle_OLD>
 		}
 		
 		Prev_Y_angle = Y_angle;
-    10ac:	80 91 7b 00 	lds	r24, 0x007B	; 0x80007b <Y_angle>
-    10b0:	90 91 7c 00 	lds	r25, 0x007C	; 0x80007c <Y_angle+0x1>
-    10b4:	a0 91 7d 00 	lds	r26, 0x007D	; 0x80007d <Y_angle+0x2>
-    10b8:	b0 91 7e 00 	lds	r27, 0x007E	; 0x80007e <Y_angle+0x3>
+    10ac:	80 91 7f 00 	lds	r24, 0x007F	; 0x80007f <Y_angle>
+    10b0:	90 91 80 00 	lds	r25, 0x0080	; 0x800080 <Y_angle+0x1>
+    10b4:	a0 91 81 00 	lds	r26, 0x0081	; 0x800081 <Y_angle+0x2>
+    10b8:	b0 91 82 00 	lds	r27, 0x0082	; 0x800082 <Y_angle+0x3>
     10bc:	80 93 77 00 	sts	0x0077, r24	; 0x800077 <Prev_Y_angle>
     10c0:	90 93 78 00 	sts	0x0078, r25	; 0x800078 <Prev_Y_angle+0x1>
     10c4:	a0 93 79 00 	sts	0x0079, r26	; 0x800079 <Prev_Y_angle+0x2>
@@ -2879,7 +2879,7 @@ void wdt_enable (const uint8_t value)
     10ee:	0f 93       	push	r16
     10f0:	1f 93       	push	r17
     10f2:	8b 01       	movw	r16, r22
-    10f4:	10 92 05 01 	sts	0x0105, r1	; 0x800105 <g_mpu_com_resp>
+    10f4:	10 92 09 01 	sts	0x0109, r1	; 0x800109 <g_mpu_com_resp>
     10f8:	c4 2e       	mov	r12, r20
     10fa:	d1 2c       	mov	r13, r1
     10fc:	e1 2c       	mov	r14, r1
@@ -2892,7 +2892,7 @@ void wdt_enable (const uint8_t value)
     110a:	28 e0       	ldi	r18, 0x08	; 8
     110c:	80 ed       	ldi	r24, 0xD0	; 208
     110e:	10 d9       	rcall	.-3552   	; 0x330 <I2C_Mem_Read>
-    1110:	80 93 05 01 	sts	0x0105, r24	; 0x800105 <g_mpu_com_resp>
+    1110:	80 93 09 01 	sts	0x0109, r24	; 0x800109 <g_mpu_com_resp>
     1114:	1f 91       	pop	r17
     1116:	0f 91       	pop	r16
     1118:	ff 90       	pop	r15
@@ -2904,7 +2904,7 @@ void wdt_enable (const uint8_t value)
     1124:	08 95       	ret
 
 00001126 <MPU6050_SetParameters>:
-    1126:	80 91 55 01 	lds	r24, 0x0155	; 0x800155 <MPU6050_Config+0x4>
+    1126:	80 91 59 01 	lds	r24, 0x0159	; 0x800159 <MPU6050_Config+0x4>
     112a:	81 30       	cpi	r24, 0x01	; 1
     112c:	99 f0       	breq	.+38     	; 0x1154 <MPU6050_SetParameters+0x2e>
     112e:	28 f0       	brcs	.+10     	; 0x113a <MPU6050_SetParameters+0x14>
@@ -2917,47 +2917,47 @@ void wdt_enable (const uint8_t value)
     113c:	90 e0       	ldi	r25, 0x00	; 0
     113e:	a0 e8       	ldi	r26, 0x80	; 128
     1140:	b6 e4       	ldi	r27, 0x46	; 70
-    1142:	80 93 01 01 	sts	0x0101, r24	; 0x800101 <MPU6050_Parameter+0x4>
-    1146:	90 93 02 01 	sts	0x0102, r25	; 0x800102 <MPU6050_Parameter+0x5>
-    114a:	a0 93 03 01 	sts	0x0103, r26	; 0x800103 <MPU6050_Parameter+0x6>
-    114e:	b0 93 04 01 	sts	0x0104, r27	; 0x800104 <MPU6050_Parameter+0x7>
+    1142:	80 93 05 01 	sts	0x0105, r24	; 0x800105 <MPU6050_Parameter+0x4>
+    1146:	90 93 06 01 	sts	0x0106, r25	; 0x800106 <MPU6050_Parameter+0x5>
+    114a:	a0 93 07 01 	sts	0x0107, r26	; 0x800107 <MPU6050_Parameter+0x6>
+    114e:	b0 93 08 01 	sts	0x0108, r27	; 0x800108 <MPU6050_Parameter+0x7>
     1152:	33 c0       	rjmp	.+102    	; 0x11ba <MPU6050_SetParameters+0x94>
     1154:	80 e0       	ldi	r24, 0x00	; 0
     1156:	90 e0       	ldi	r25, 0x00	; 0
     1158:	a0 e0       	ldi	r26, 0x00	; 0
     115a:	b6 e4       	ldi	r27, 0x46	; 70
-    115c:	80 93 01 01 	sts	0x0101, r24	; 0x800101 <MPU6050_Parameter+0x4>
-    1160:	90 93 02 01 	sts	0x0102, r25	; 0x800102 <MPU6050_Parameter+0x5>
-    1164:	a0 93 03 01 	sts	0x0103, r26	; 0x800103 <MPU6050_Parameter+0x6>
-    1168:	b0 93 04 01 	sts	0x0104, r27	; 0x800104 <MPU6050_Parameter+0x7>
+    115c:	80 93 05 01 	sts	0x0105, r24	; 0x800105 <MPU6050_Parameter+0x4>
+    1160:	90 93 06 01 	sts	0x0106, r25	; 0x800106 <MPU6050_Parameter+0x5>
+    1164:	a0 93 07 01 	sts	0x0107, r26	; 0x800107 <MPU6050_Parameter+0x6>
+    1168:	b0 93 08 01 	sts	0x0108, r27	; 0x800108 <MPU6050_Parameter+0x7>
     116c:	26 c0       	rjmp	.+76     	; 0x11ba <MPU6050_SetParameters+0x94>
     116e:	80 e0       	ldi	r24, 0x00	; 0
     1170:	90 e0       	ldi	r25, 0x00	; 0
     1172:	a0 e8       	ldi	r26, 0x80	; 128
     1174:	b5 e4       	ldi	r27, 0x45	; 69
-    1176:	80 93 01 01 	sts	0x0101, r24	; 0x800101 <MPU6050_Parameter+0x4>
-    117a:	90 93 02 01 	sts	0x0102, r25	; 0x800102 <MPU6050_Parameter+0x5>
-    117e:	a0 93 03 01 	sts	0x0103, r26	; 0x800103 <MPU6050_Parameter+0x6>
-    1182:	b0 93 04 01 	sts	0x0104, r27	; 0x800104 <MPU6050_Parameter+0x7>
+    1176:	80 93 05 01 	sts	0x0105, r24	; 0x800105 <MPU6050_Parameter+0x4>
+    117a:	90 93 06 01 	sts	0x0106, r25	; 0x800106 <MPU6050_Parameter+0x5>
+    117e:	a0 93 07 01 	sts	0x0107, r26	; 0x800107 <MPU6050_Parameter+0x6>
+    1182:	b0 93 08 01 	sts	0x0108, r27	; 0x800108 <MPU6050_Parameter+0x7>
     1186:	19 c0       	rjmp	.+50     	; 0x11ba <MPU6050_SetParameters+0x94>
     1188:	80 e0       	ldi	r24, 0x00	; 0
     118a:	90 e0       	ldi	r25, 0x00	; 0
     118c:	a0 e0       	ldi	r26, 0x00	; 0
     118e:	b5 e4       	ldi	r27, 0x45	; 69
-    1190:	80 93 01 01 	sts	0x0101, r24	; 0x800101 <MPU6050_Parameter+0x4>
-    1194:	90 93 02 01 	sts	0x0102, r25	; 0x800102 <MPU6050_Parameter+0x5>
-    1198:	a0 93 03 01 	sts	0x0103, r26	; 0x800103 <MPU6050_Parameter+0x6>
-    119c:	b0 93 04 01 	sts	0x0104, r27	; 0x800104 <MPU6050_Parameter+0x7>
+    1190:	80 93 05 01 	sts	0x0105, r24	; 0x800105 <MPU6050_Parameter+0x4>
+    1194:	90 93 06 01 	sts	0x0106, r25	; 0x800106 <MPU6050_Parameter+0x5>
+    1198:	a0 93 07 01 	sts	0x0107, r26	; 0x800107 <MPU6050_Parameter+0x6>
+    119c:	b0 93 08 01 	sts	0x0108, r27	; 0x800108 <MPU6050_Parameter+0x7>
     11a0:	0c c0       	rjmp	.+24     	; 0x11ba <MPU6050_SetParameters+0x94>
     11a2:	80 e0       	ldi	r24, 0x00	; 0
     11a4:	90 e0       	ldi	r25, 0x00	; 0
     11a6:	a0 e8       	ldi	r26, 0x80	; 128
     11a8:	b6 e4       	ldi	r27, 0x46	; 70
-    11aa:	80 93 01 01 	sts	0x0101, r24	; 0x800101 <MPU6050_Parameter+0x4>
-    11ae:	90 93 02 01 	sts	0x0102, r25	; 0x800102 <MPU6050_Parameter+0x5>
-    11b2:	a0 93 03 01 	sts	0x0103, r26	; 0x800103 <MPU6050_Parameter+0x6>
-    11b6:	b0 93 04 01 	sts	0x0104, r27	; 0x800104 <MPU6050_Parameter+0x7>
-    11ba:	80 91 54 01 	lds	r24, 0x0154	; 0x800154 <MPU6050_Config+0x3>
+    11aa:	80 93 05 01 	sts	0x0105, r24	; 0x800105 <MPU6050_Parameter+0x4>
+    11ae:	90 93 06 01 	sts	0x0106, r25	; 0x800106 <MPU6050_Parameter+0x5>
+    11b2:	a0 93 07 01 	sts	0x0107, r26	; 0x800107 <MPU6050_Parameter+0x6>
+    11b6:	b0 93 08 01 	sts	0x0108, r27	; 0x800108 <MPU6050_Parameter+0x7>
+    11ba:	80 91 58 01 	lds	r24, 0x0158	; 0x800158 <MPU6050_Config+0x3>
     11be:	81 30       	cpi	r24, 0x01	; 1
     11c0:	99 f0       	breq	.+38     	; 0x11e8 <MPU6050_SetParameters+0xc2>
     11c2:	28 f0       	brcs	.+10     	; 0x11ce <MPU6050_SetParameters+0xa8>
@@ -2970,46 +2970,46 @@ void wdt_enable (const uint8_t value)
     11d0:	90 e0       	ldi	r25, 0x00	; 0
     11d2:	a3 e0       	ldi	r26, 0x03	; 3
     11d4:	b3 e4       	ldi	r27, 0x43	; 67
-    11d6:	80 93 fd 00 	sts	0x00FD, r24	; 0x8000fd <MPU6050_Parameter>
-    11da:	90 93 fe 00 	sts	0x00FE, r25	; 0x8000fe <MPU6050_Parameter+0x1>
-    11de:	a0 93 ff 00 	sts	0x00FF, r26	; 0x8000ff <MPU6050_Parameter+0x2>
-    11e2:	b0 93 00 01 	sts	0x0100, r27	; 0x800100 <MPU6050_Parameter+0x3>
+    11d6:	80 93 01 01 	sts	0x0101, r24	; 0x800101 <MPU6050_Parameter>
+    11da:	90 93 02 01 	sts	0x0102, r25	; 0x800102 <MPU6050_Parameter+0x1>
+    11de:	a0 93 03 01 	sts	0x0103, r26	; 0x800103 <MPU6050_Parameter+0x2>
+    11e2:	b0 93 04 01 	sts	0x0104, r27	; 0x800104 <MPU6050_Parameter+0x3>
     11e6:	08 95       	ret
     11e8:	80 e0       	ldi	r24, 0x00	; 0
     11ea:	90 e0       	ldi	r25, 0x00	; 0
     11ec:	a3 e8       	ldi	r26, 0x83	; 131
     11ee:	b2 e4       	ldi	r27, 0x42	; 66
-    11f0:	80 93 fd 00 	sts	0x00FD, r24	; 0x8000fd <MPU6050_Parameter>
-    11f4:	90 93 fe 00 	sts	0x00FE, r25	; 0x8000fe <MPU6050_Parameter+0x1>
-    11f8:	a0 93 ff 00 	sts	0x00FF, r26	; 0x8000ff <MPU6050_Parameter+0x2>
-    11fc:	b0 93 00 01 	sts	0x0100, r27	; 0x800100 <MPU6050_Parameter+0x3>
+    11f0:	80 93 01 01 	sts	0x0101, r24	; 0x800101 <MPU6050_Parameter>
+    11f4:	90 93 02 01 	sts	0x0102, r25	; 0x800102 <MPU6050_Parameter+0x1>
+    11f8:	a0 93 03 01 	sts	0x0103, r26	; 0x800103 <MPU6050_Parameter+0x2>
+    11fc:	b0 93 04 01 	sts	0x0104, r27	; 0x800104 <MPU6050_Parameter+0x3>
     1200:	08 95       	ret
     1202:	83 e3       	ldi	r24, 0x33	; 51
     1204:	93 e3       	ldi	r25, 0x33	; 51
     1206:	a3 e0       	ldi	r26, 0x03	; 3
     1208:	b2 e4       	ldi	r27, 0x42	; 66
-    120a:	80 93 fd 00 	sts	0x00FD, r24	; 0x8000fd <MPU6050_Parameter>
-    120e:	90 93 fe 00 	sts	0x00FE, r25	; 0x8000fe <MPU6050_Parameter+0x1>
-    1212:	a0 93 ff 00 	sts	0x00FF, r26	; 0x8000ff <MPU6050_Parameter+0x2>
-    1216:	b0 93 00 01 	sts	0x0100, r27	; 0x800100 <MPU6050_Parameter+0x3>
+    120a:	80 93 01 01 	sts	0x0101, r24	; 0x800101 <MPU6050_Parameter>
+    120e:	90 93 02 01 	sts	0x0102, r25	; 0x800102 <MPU6050_Parameter+0x1>
+    1212:	a0 93 03 01 	sts	0x0103, r26	; 0x800103 <MPU6050_Parameter+0x2>
+    1216:	b0 93 04 01 	sts	0x0104, r27	; 0x800104 <MPU6050_Parameter+0x3>
     121a:	08 95       	ret
     121c:	83 e3       	ldi	r24, 0x33	; 51
     121e:	93 e3       	ldi	r25, 0x33	; 51
     1220:	a3 e8       	ldi	r26, 0x83	; 131
     1222:	b1 e4       	ldi	r27, 0x41	; 65
-    1224:	80 93 fd 00 	sts	0x00FD, r24	; 0x8000fd <MPU6050_Parameter>
-    1228:	90 93 fe 00 	sts	0x00FE, r25	; 0x8000fe <MPU6050_Parameter+0x1>
-    122c:	a0 93 ff 00 	sts	0x00FF, r26	; 0x8000ff <MPU6050_Parameter+0x2>
-    1230:	b0 93 00 01 	sts	0x0100, r27	; 0x800100 <MPU6050_Parameter+0x3>
+    1224:	80 93 01 01 	sts	0x0101, r24	; 0x800101 <MPU6050_Parameter>
+    1228:	90 93 02 01 	sts	0x0102, r25	; 0x800102 <MPU6050_Parameter+0x1>
+    122c:	a0 93 03 01 	sts	0x0103, r26	; 0x800103 <MPU6050_Parameter+0x2>
+    1230:	b0 93 04 01 	sts	0x0104, r27	; 0x800104 <MPU6050_Parameter+0x3>
     1234:	08 95       	ret
     1236:	80 e0       	ldi	r24, 0x00	; 0
     1238:	90 e0       	ldi	r25, 0x00	; 0
     123a:	a3 e0       	ldi	r26, 0x03	; 3
     123c:	b3 e4       	ldi	r27, 0x43	; 67
-    123e:	80 93 fd 00 	sts	0x00FD, r24	; 0x8000fd <MPU6050_Parameter>
-    1242:	90 93 fe 00 	sts	0x00FE, r25	; 0x8000fe <MPU6050_Parameter+0x1>
-    1246:	a0 93 ff 00 	sts	0x00FF, r26	; 0x8000ff <MPU6050_Parameter+0x2>
-    124a:	b0 93 00 01 	sts	0x0100, r27	; 0x800100 <MPU6050_Parameter+0x3>
+    123e:	80 93 01 01 	sts	0x0101, r24	; 0x800101 <MPU6050_Parameter>
+    1242:	90 93 02 01 	sts	0x0102, r25	; 0x800102 <MPU6050_Parameter+0x1>
+    1246:	a0 93 03 01 	sts	0x0103, r26	; 0x800103 <MPU6050_Parameter+0x2>
+    124a:	b0 93 04 01 	sts	0x0104, r27	; 0x800104 <MPU6050_Parameter+0x3>
     124e:	08 95       	ret
 
 00001250 <MPU6050_IsReady>:
@@ -3037,7 +3037,7 @@ void wdt_enable (const uint8_t value)
     1276:	18 2f       	mov	r17, r24
     1278:	69 83       	std	Y+1, r22	; 0x01
     127a:	5a 01       	movw	r10, r20
-    127c:	10 92 05 01 	sts	0x0105, r1	; 0x800105 <g_mpu_com_resp>
+    127c:	10 92 09 01 	sts	0x0109, r1	; 0x800109 <g_mpu_com_resp>
     1280:	ca 01       	movw	r24, r20
     1282:	e6 df       	rcall	.-52     	; 0x1250 <MPU6050_IsReady>
     1284:	81 30       	cpi	r24, 0x01	; 1
@@ -3056,8 +3056,8 @@ void wdt_enable (const uint8_t value)
     129e:	28 e0       	ldi	r18, 0x08	; 8
     12a0:	80 ed       	ldi	r24, 0xD0	; 208
     12a2:	74 d7       	rcall	.+3816   	; 0x218c <__TEXT_REGION_LENGTH__+0x18c>
-    12a4:	80 93 05 01 	sts	0x0105, r24	; 0x800105 <g_mpu_com_resp>
-    12a8:	80 91 05 01 	lds	r24, 0x0105	; 0x800105 <g_mpu_com_resp>
+    12a4:	80 93 09 01 	sts	0x0109, r24	; 0x800109 <g_mpu_com_resp>
+    12a8:	80 91 09 01 	lds	r24, 0x0109	; 0x800109 <g_mpu_com_resp>
     12ac:	0f 90       	pop	r0
     12ae:	df 91       	pop	r29
     12b0:	cf 91       	pop	r28
@@ -3084,14 +3084,14 @@ void wdt_enable (const uint8_t value)
     12d6:	df 93       	push	r29
     12d8:	8c 01       	movw	r16, r24
     12da:	24 d7       	rcall	.+3656   	; 0x2124 <__TEXT_REGION_LENGTH__+0x124>
-    12dc:	c1 e5       	ldi	r28, 0x51	; 81
+    12dc:	c5 e5       	ldi	r28, 0x55	; 85
     12de:	d1 e0       	ldi	r29, 0x01	; 1
     12e0:	18 82       	st	Y, r1
     12e2:	1a 82       	std	Y+2, r1	; 0x02
     12e4:	1e 82       	std	Y+6, r1	; 0x06
     12e6:	19 82       	std	Y+1, r1	; 0x01
     12e8:	0f 2e       	mov	r0, r31
-    12ea:	f6 e5       	ldi	r31, 0x56	; 86
+    12ea:	fa e5       	ldi	r31, 0x5A	; 90
     12ec:	af 2e       	mov	r10, r31
     12ee:	f1 e0       	ldi	r31, 0x01	; 1
     12f0:	bf 2e       	mov	r11, r31
@@ -3109,15 +3109,15 @@ void wdt_enable (const uint8_t value)
     1308:	60 e0       	ldi	r22, 0x00	; 0
     130a:	88 e3       	ldi	r24, 0x38	; 56
     130c:	a7 df       	rcall	.-178    	; 0x125c <MPU6050_SingleWrite>
-    130e:	80 93 05 01 	sts	0x0105, r24	; 0x800105 <g_mpu_com_resp>
+    130e:	80 93 09 01 	sts	0x0109, r24	; 0x800109 <g_mpu_com_resp>
     1312:	68 81       	ld	r22, Y
     1314:	61 50       	subi	r22, 0x01	; 1
     1316:	a8 01       	movw	r20, r16
     1318:	89 e1       	ldi	r24, 0x19	; 25
     131a:	a0 df       	rcall	.-192    	; 0x125c <MPU6050_SingleWrite>
-    131c:	90 91 05 01 	lds	r25, 0x0105	; 0x800105 <g_mpu_com_resp>
+    131c:	90 91 09 01 	lds	r25, 0x0109	; 0x800109 <g_mpu_com_resp>
     1320:	89 0f       	add	r24, r25
-    1322:	80 93 05 01 	sts	0x0105, r24	; 0x800105 <g_mpu_com_resp>
+    1322:	80 93 09 01 	sts	0x0109, r24	; 0x800109 <g_mpu_com_resp>
     1326:	6b 81       	ldd	r22, Y+3	; 0x03
     1328:	66 0f       	add	r22, r22
     132a:	66 0f       	add	r22, r22
@@ -3125,9 +3125,9 @@ void wdt_enable (const uint8_t value)
     132e:	a8 01       	movw	r20, r16
     1330:	8b e1       	ldi	r24, 0x1B	; 27
     1332:	94 df       	rcall	.-216    	; 0x125c <MPU6050_SingleWrite>
-    1334:	90 91 05 01 	lds	r25, 0x0105	; 0x800105 <g_mpu_com_resp>
+    1334:	90 91 09 01 	lds	r25, 0x0109	; 0x800109 <g_mpu_com_resp>
     1338:	89 0f       	add	r24, r25
-    133a:	80 93 05 01 	sts	0x0105, r24	; 0x800105 <g_mpu_com_resp>
+    133a:	80 93 09 01 	sts	0x0109, r24	; 0x800109 <g_mpu_com_resp>
     133e:	6c 81       	ldd	r22, Y+4	; 0x04
     1340:	66 0f       	add	r22, r22
     1342:	66 0f       	add	r22, r22
@@ -3135,9 +3135,9 @@ void wdt_enable (const uint8_t value)
     1346:	a8 01       	movw	r20, r16
     1348:	8c e1       	ldi	r24, 0x1C	; 28
     134a:	88 df       	rcall	.-240    	; 0x125c <MPU6050_SingleWrite>
-    134c:	90 91 05 01 	lds	r25, 0x0105	; 0x800105 <g_mpu_com_resp>
+    134c:	90 91 09 01 	lds	r25, 0x0109	; 0x800109 <g_mpu_com_resp>
     1350:	89 0f       	add	r24, r25
-    1352:	80 93 05 01 	sts	0x0105, r24	; 0x800105 <g_mpu_com_resp>
+    1352:	80 93 09 01 	sts	0x0109, r24	; 0x800109 <g_mpu_com_resp>
     1356:	69 81       	ldd	r22, Y+1	; 0x01
     1358:	66 0f       	add	r22, r22
     135a:	66 0f       	add	r22, r22
@@ -3147,9 +3147,9 @@ void wdt_enable (const uint8_t value)
     1362:	a8 01       	movw	r20, r16
     1364:	8a e1       	ldi	r24, 0x1A	; 26
     1366:	7a df       	rcall	.-268    	; 0x125c <MPU6050_SingleWrite>
-    1368:	90 91 05 01 	lds	r25, 0x0105	; 0x800105 <g_mpu_com_resp>
+    1368:	90 91 09 01 	lds	r25, 0x0109	; 0x800109 <g_mpu_com_resp>
     136c:	89 0f       	add	r24, r25
-    136e:	80 93 05 01 	sts	0x0105, r24	; 0x800105 <g_mpu_com_resp>
+    136e:	80 93 09 01 	sts	0x0109, r24	; 0x800109 <g_mpu_com_resp>
     1372:	f5 01       	movw	r30, r10
     1374:	80 81       	ld	r24, Z
     1376:	68 2f       	mov	r22, r24
@@ -3189,16 +3189,16 @@ void wdt_enable (const uint8_t value)
     13ba:	a8 01       	movw	r20, r16
     13bc:	87 e3       	ldi	r24, 0x37	; 55
     13be:	4e df       	rcall	.-356    	; 0x125c <MPU6050_SingleWrite>
-    13c0:	90 91 05 01 	lds	r25, 0x0105	; 0x800105 <g_mpu_com_resp>
+    13c0:	90 91 09 01 	lds	r25, 0x0109	; 0x800109 <g_mpu_com_resp>
     13c4:	89 0f       	add	r24, r25
-    13c6:	80 93 05 01 	sts	0x0105, r24	; 0x800105 <g_mpu_com_resp>
+    13c6:	80 93 09 01 	sts	0x0109, r24	; 0x800109 <g_mpu_com_resp>
     13ca:	a8 01       	movw	r20, r16
     13cc:	6f 81       	ldd	r22, Y+7	; 0x07
     13ce:	8b e6       	ldi	r24, 0x6B	; 107
     13d0:	45 df       	rcall	.-374    	; 0x125c <MPU6050_SingleWrite>
-    13d2:	90 91 05 01 	lds	r25, 0x0105	; 0x800105 <g_mpu_com_resp>
+    13d2:	90 91 09 01 	lds	r25, 0x0109	; 0x800109 <g_mpu_com_resp>
     13d6:	89 0f       	add	r24, r25
-    13d8:	80 93 05 01 	sts	0x0105, r24	; 0x800105 <g_mpu_com_resp>
+    13d8:	80 93 09 01 	sts	0x0109, r24	; 0x800109 <g_mpu_com_resp>
     13dc:	87 30       	cpi	r24, 0x07	; 7
     13de:	19 f4       	brne	.+6      	; 0x13e6 <MPU6050_AutoInit+0x122>
     13e0:	a2 de       	rcall	.-700    	; 0x1126 <MPU6050_SetParameters>
